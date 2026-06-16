@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Indian Mutual Fund Portfolio Dashboard | Kushal Lunia</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Inter',sans-serif;
+    background:#f8fafc;
+    color:#1e293b;
+    line-height:1.7;
+}
+
+.container{
+    width:90%;
+    max-width:1200px;
+    margin:auto;
+}
+
+.hero{
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    color:white;
+    padding:80px 20px;
+    text-align:center;
+}
+
+.hero h1{
+    font-size:3rem;
+    margin-bottom:15px;
+}
+
+.hero p{
+    max-width:900px;
+    margin:auto;
+    color:#cbd5e1;
+    font-size:1.1rem;
+}
+
+.section{
+    padding:70px 0;
+}
+
+.section-title{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.section-title h2{
+    font-size:2rem;
+    color:#0f172a;
+}
+
+.card{
+    background:white;
+    padding:35px;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+.features{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.feature{
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    text-align:center;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+}
+
+.feature h3{
+    color:#2563eb;
+    margin-bottom:10px;
+}
+
+.portfolio-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:25px;
+}
+
+.portfolio-card{
+    background:white;
+    padding:25px;
+    border-radius:16px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.08);
+    transition:all 0.3s ease;
+}
+
+.portfolio-card:hover{
+    transform:translateY(-5px);
+}
+
+.portfolio-card h3{
+    margin-bottom:10px;
+}
+
+.portfolio-card p{
+    color:#64748b;
+    margin-bottom:20px;
+}
+
+.badge{
+    display:inline-block;
+    background:#eff6ff;
+    color:#2563eb;
+    padding:5px 12px;
+    border-radius:6px;
+    font-size:0.85rem;
+    font-weight:600;
+    margin-bottom:15px;
+}
+
+.btn{
+    text-decoration:none;
+    display:inline-block;
+    background:#2563eb;
+    color:white;
+    padding:10px 18px;
+    border-radius:8px;
+    font-weight:600;
+}
+
+.btn:hover{
+    background:#1d4ed8;
+}
+
+.author{
+    text-align:center;
+}
+
+.footer{
+    background:#0f172a;
+    color:white;
+    text-align:center;
+    padding:25px;
+    margin-top:40px;
+}
+
+@media(max-width:768px){
+.hero h1{ font-size:2rem; }
+.hero p{ font-size:1rem; }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="hero">
+<div class="container">
+<h1>📊 Indian Mutual Fund Portfolio Dashboard</h1>
+<p>
+An institutional-grade, interactive HTML dashboard for analyzing Indian mutual fund portfolios. Upload your CAS, MF Central, or AMC statements to get fund-wise performance, allocation breakdown, action recommendations, tax opportunities, and a portfolio score out of 10.
+</p>
+</div>
+</header>
+
+<section class="section">
+<div class="container">
+<div class="section-title"><h2>About This Project</h2></div>
+<div class="card">
+<p>Welcome to my Indian Mutual Fund Portfolio Dashboard, a project developed to perform structured and comprehensive analysis of Indian mutual fund investments through CAS, MF Central, and AMC statement parsing.</p>
+<br>
+<p>The dashboard integrates fund-wise performance analysis (XIRR, returns, benchmark/category comparison), allocation breakdown (asset class, category, cap size), action recommendations, tax optimization opportunities, source verification, and a 3-tier scoring framework into an interactive analytical framework.</p>
+<br>
+<p>The objective of this project is to transform mutual fund statement data into meaningful insights and establish a standardized approach for evaluating mutual fund portfolios across categories, AMCs, and investment goals.</p>
+<br>
+<p>Through this initiative, I aim to demonstrate the application of financial analysis, mutual fund expertise, data visualization, and analytical problem-solving in the field of mutual fund portfolio analysis and investment planning.</p>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="container">
+<div class="section-title"><h2>From Data to Decisions</h2></div>
+<div class="card">
+<p style="font-size:1.05rem; margin-bottom:25px;">Mutual fund platforms and portfolio screeners excel at providing data. However, investment decisions require much more than numbers alone. Investors must understand fund quality, manager execution, overlap risks, expense efficiency, tax impact, and future growth prospects before building conviction.</p>
+<p style="font-size:1.05rem; margin-bottom:35px;">This dashboard is designed as a research layer on top of mutual fund platforms. Rather than replacing portfolio screeners, it helps investors transform information into structured investment insights.</p>
+
+<table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
+<tr style="background:#f1f5f9;">
+<th style="padding:15px; border:1px solid #e2e8f0; text-align:left;">Mutual Fund Platforms</th>
+<th style="padding:15px; border:1px solid #e2e8f0; text-align:left;">Indian Mutual Fund Portfolio Dashboard</th>
+</tr>
+<tr><td style="padding:12px; border:1px solid #e2e8f0;">Provides mutual fund data</td><td style="padding:12px; border:1px solid #e2e8f0;">Provides interpretation and context</td></tr>
+<tr><td style="padding:12px; border:1px solid #e2e8f0;">Focus on historical NAV</td><td style="padding:12px; border:1px solid #e2e8f0;">Focus on future opportunities and risks</td></tr>
+<tr><td style="padding:12px; border:1px solid #e2e8f0;">Requires manual research</td><td style="padding:12px; border:1px solid #e2e8f0;">Provides a structured research framework</td></tr>
+<tr><td style="padding:12px; border:1px solid #e2e8f0;">Ratio and data-centric</td><td style="padding:12px; border:1px solid #e2e8f0;">Fund and decision-centric</td></tr>
+<tr><td style="padding:12px; border:1px solid #e2e8f0;">Answers "What happened?"</td><td style="padding:12px; border:1px solid #e2e8f0;">Answers "Why it happened?" and "What could happen next?"</td></tr>
+</table>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(350px,1fr)); gap:35px;">
+<div>
+<h3 style="color:#2563eb; margin-bottom:15px;">📊 What This Dashboard Covers</h3>
+<ul style="padding-left:20px;">
+<li>Investor Summary & Portfolio Overview</li>
+<li>Fund-wise Performance (XIRR, Returns)</li>
+<li>Benchmark & Category Comparison</li>
+<li>Peer Percentile Ranking</li>
+<li>Risk Metrics (Volatility, Beta, Alpha)</li>
+<li>Overlap & Concentration Analysis</li>
+<li>Allocation Breakdown (Asset Class, Category, Cap)</li>
+<li>Cost Analysis (Expense Ratio, Direct vs Regular)</li>
+<li>Tax Efficiency & Opportunities</li>
+<li>Action Recommendations (Rebalance, Exit, Switch)</li>
+<li>Source Verification (CAS/AMC/AMFI/SEBI)</li>
+<li>Portfolio Score out of 10 (3-Tier Framework)</li>
+<li>Nominee Status Check</li>
+<li>Data Freshness & Confidence Score</li>
+<li>Missing Data Flags</li>
+<li>Decision Confidence Assessment</li>
+</ul>
+</div>
+<div>
+<h3 style="color:#2563eb; margin-bottom:15px;">🎯 Why Use This Dashboard</h3>
+<ul style="padding-left:20px;">
+<li>Move beyond NAV and understand the fund behind the numbers</li>
+<li>Reduce hours of manual research and information gathering</li>
+<li>Quickly identify underperforming funds and major risks</li>
+<li>Evaluate fund manager quality and execution capability</li>
+<li>Assess whether expense ratio is justified by performance</li>
+<li>Understand portfolio overlap and concentration risks</li>
+<li>Develop a structured portfolio optimization plan</li>
+<li>View tax opportunities before making investment decisions</li>
+<li>Improve investment decision-making with a consistent framework</li>
+<li>Consolidate multiple research dimensions into one dashboard</li>
+</ul>
+</div>
+</div>
+
+<br><br>
+<h3 style="color:#2563eb; margin-bottom:15px;">🔍 Recommended Workflow</h3>
+<p style="margin-bottom:15px;">The most effective approach is to use this dashboard alongside mutual fund platforms and portfolio screeners.</p>
+<ol style="padding-left:20px;">
+<li>Use mutual fund platforms to discover and shortlist potential fund opportunities.</li>
+<li>Upload your CAS, MF Central, or AMC statement to the dashboard.</li>
+<li>Understand fund quality, overlap risks, expense efficiency, tax impact, and portfolio thesis.</li>
+<li>Review action recommendations and tax optimization opportunities.</li>
+<li>Use the consolidated insights and portfolio score to support investment decisions.</li>
+</ol>
+
+<br>
+<div style="background:#eff6ff; border-left:5px solid #2563eb; padding:20px; border-radius:10px;">
+<strong>Key Philosophy</strong>
+<br><br>
+Mutual fund statements tell the story of the past. Investment decisions depend on understanding the future. This dashboard attempts to bridge that gap by combining fund analysis, performance review, benchmark comparison, risk evaluation, tax reasoning, and portfolio optimization into a single research framework.
+</div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="container">
+<div class="section-title"><h2>What This Dashboard Covers</h2></div>
+<div class="features">
+<div class="feature"><h3>📈 Performance Analysis</h3><p>XIRR, returns, benchmarks, category & peer comparison.</p></div>
+<div class="feature"><h3>💰 Allocation</h3><p>Asset class, category, cap size, and sector breakdown.</p></div>
+<div class="feature"><h3>⚖️ Risk Assessment</h3><p>Overlap, concentration, volatility, beta, alpha.</p></div>
+<div class="feature"><h3>📊 Interactive HTML</h3><p>Clickable tabs, sortable tables, filters, hover tooltips.</p></div>
+<div class="feature"><h3>💵 Tax Optimization</h3><p>Tax efficiency, STT/HFT, indexation, ELSS opportunities.</p></div>
+<div class="feature"><h3>🏆 Portfolio Score</h3><p>3-tier scoring framework out of 10 with source verification.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="container">
+<div class="section-title"><h2>Sample Portfolios</h2></div>
+<div class="portfolio-grid">
+<div class="portfolio-card">
+<span class="badge">Coming Soon</span>
+<h3>Portfolio 1</h3>
+<p>Placeholder for your first mutual fund portfolio. Upload CAS/MF Central/AMC statement to analyze.</p>
+<a class="btn" href="portfolio_1_dashboard.html">View Dashboard</a>
+</div>
+<div class="portfolio-card">
+<span class="badge">Coming Soon</span>
+<h3>Portfolio 2</h3>
+<p>Placeholder for your second mutual fund portfolio. Upload CAS/MF Central/AMC statement to analyze.</p>
+<a class="btn" href="portfolio_2_dashboard.html">View Dashboard</a>
+</div>
+<div class="portfolio-card">
+<span class="badge">Coming Soon</span>
+<h3>Portfolio 3</h3>
+<p>Placeholder for your third mutual fund portfolio. Upload CAS/MF Central/AMC statement to analyze.</p>
+<a class="btn" href="portfolio_3_dashboard.html">View Dashboard</a>
+</div>
+<div class="portfolio-card">
+<span class="badge">Coming Soon</span>
+<h3>Portfolio 4</h3>
+<p>Placeholder for your fourth mutual fund portfolio. Upload CAS/MF Central/AMC statement to analyze.</p>
+<a class="btn" href="portfolio_4_dashboard.html">View Dashboard</a>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="container">
+<div class="card author">
+<h2>Kushal Lunia</h2>
+<p>CA Finalist | Ex-UBS | Ex-EY | Alteryx | Power BI | Power Query</p>
+<p style="margin-top:15px;">
+<a href="https://linkedin.com/in/kushal-lunia-7b9585138" target="_blank" style="color:#2563eb; font-weight:600; text-decoration:none;">🔗 Connect with me on LinkedIn</a>
+<img src="profile.jpeg" alt="Kushal Lunia" style="width:180px;height:180px;border-radius:50%;object-fit:cover;margin-left:20px;box-shadow:0 8px 25px rgba(0,0,0,0.15);border:5px solid white;">
+</p>
+<p style="margin-top:15px;">Areas of Interest: AI, Automation, Mutual Fund Analysis, Financial Analysis, Valuation, Corporate Finance, Business Analysis and Data Analytics.</p>
+</div>
+</div>
+</section>
+
+<footer class="footer">
+<p>Prepared by: Kushal Lunia • Indian Mutual Fund Portfolio Dashboard</p>
+<p style="margin-top:10px; font-size:0.85rem; color:#cbd5e1;">Credential: CA Finalist | Ex-UBS | Ex-EY | Alteryx | Power BI | Power Query</p>
+<p style="margin-top:10px; font-size:0.75rem; color:#94a3b8;">⚠️ Disclaimer: AI-generated analysis. For informational use only. Not financial advice. Past performance ≠ future results. Verify all data before investing.</p>
+</footer>
+
+</body>
+</html>
