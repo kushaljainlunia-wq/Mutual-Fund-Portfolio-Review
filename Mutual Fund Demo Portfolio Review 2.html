@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mutual Fund Portfolio Dashboard — Mahendra Kumar Lunia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{
+  --green:#34D399; --amber:#FBBF24; --red:#F87171; --cyan:#06B6D4;
+  --bg:#0f1521; --panel:#161e2e; --panel2:#1c2538; --border:#2a3447;
+  --text:#e7ecf5; --muted:#93a1bb; --accent:#5b8def;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+a{color:var(--cyan);}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 20px 60px;}
+header.top{padding:18px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+header.top h1{font-size:22px;margin:0 0 4px;}
+header.top .sub{color:var(--muted);font-size:13px;}
+.banner{display:flex;flex-wrap:wrap;gap:18px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:14px 0;font-size:13px;}
+.banner b{color:var(--text);}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge.green{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4);}
+.badge.amber{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.4);}
+.badge.red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.4);}
+.badge.cyan{background:rgba(6,182,212,.15);color:var(--cyan);border:1px solid rgba(6,182,212,.4);}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 16px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab-btn{background:none;border:none;color:var(--muted);padding:10px 16px;font-size:14px;cursor:pointer;border-bottom:3px solid transparent;font-weight:600;border-radius:6px 6px 0 0;}
+.tab-btn:hover{color:var(--text);background:var(--panel);}
+.tab-btn.active{color:var(--text);border-bottom:3px solid var(--accent);background:var(--panel);}
+.tabpanel{display:none;animation:fade .25s ease;}
+.tabpanel.active{display:block;}
+@keyframes fade{from{opacity:0;}to{opacity:1;}}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.card .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+.card .value{font-size:22px;font-weight:700;margin-top:4px;}
+.card .value.green{color:var(--green);} .card .value.red{color:var(--red);} .card .value.amber{color:var(--amber);}
+.section{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:18px;}
+.section h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+.section h3{font-size:14px;margin:16px 0 8px;color:var(--text);}
+.muted{color:var(--muted);font-size:13px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top;}
+th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;user-select:none;white-space:nowrap;}
+th:hover{color:var(--text);}
+th.sort-asc::after{content:" ▲";} th.sort-desc::after{content:" ▼";}
+tbody tr:hover{background:rgba(255,255,255,.03);}
+.tag{display:inline-block;padding:1px 8px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;}
+.tag.High{background:rgba(248,113,113,.18);color:var(--red);}
+.tag.Medium{background:rgba(251,191,36,.18);color:var(--amber);}
+.tag.Low{background:rgba(52,211,153,.18);color:var(--green);}
+.tag.conf-High{border:1px solid var(--green);color:var(--green);}
+.tag.conf-Moderate{border:1px solid var(--amber);color:var(--amber);}
+.tag.conf-Low{border:1px solid var(--red);color:var(--red);}
+.flagwarn{color:var(--amber);} .flagbad{color:var(--red);} .flaggood{color:var(--green);}
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center;}
+select,input[type=text]{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;}
+button.btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:6px;font-size:13px;cursor:pointer;}
+button.btn:hover{border-color:var(--accent);color:var(--accent);}
+button.btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.expand-toggle{cursor:pointer;color:var(--cyan);font-size:12px;}
+.fund-detail{display:none;background:var(--panel2);border-top:1px dashed var(--border);}
+.fund-detail.show{display:table-row;}
+.fund-detail td{padding:14px 18px;}
+.barwrap{background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;margin-top:4px;}
+.bar{height:100%;border-radius:6px;}
+.legend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0 18px;}
+.legend-item{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;}
+.legend-item b{display:block;margin-bottom:3px;}
+footer{margin-top:28px;border-top:1px solid var(--border);padding-top:18px;font-size:12px;color:var(--muted);}
+footer h4{color:var(--text);font-size:13px;margin:14px 0 6px;}
+footer p{margin:6px 0;}
+.pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.small{font-size:12px;}
+.right{text-align:right;}
+.collapsible-head{cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.hidden-block{display:none;}
+.hidden-block.show{display:block;}
+.score-bar-track{background:var(--panel2);border-radius:8px;height:18px;overflow:hidden;position:relative;margin:6px 0;}
+.score-bar-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--amber),var(--green));}
+.toplist{margin:0;padding-left:18px;}
+.toplist li{margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>📊 Mutual Fund Portfolio Dashboard</h1>
+  <div class="sub">Prepared for <b style="color:var(--text)">Mahendra Kumar Lunia</b> · PAN: AASPL7294F · Holdings as on 17-Jun-2026 · Report generated: 18-Jun-2026</div>
+</header>
+
+<div class="banner" id="freshnessBanner">
+  <span class="badge amber">🟡 DATA IS MODERATELY CURRENT</span>
+  <span>Latest Statement Date: <b>17-Jun-2026</b></span>
+  <span>Latest Verification Date: <b>18-Jun-2026</b></span>
+  <span>Primary Sources: <b>AMC factsheets (Tata MF, Mahindra Manulife, Kotak MF, Axis MF) + AMFI cross-checks + Value Research / INDmoney / Groww (aggregators)</b></span>
+  <span>Missing Data Count: <b>9 of 9 holdings — purchase dates not present in statement; nominee fields absent</b></span>
+  <span>Max Confidence Score: <b>10.0/10</b></span>
+</div>
+<p class="muted small">⚠ Several return and expense-ratio figures showed meaningful variance across data aggregators (different "as-of" dates/calculation methods). Where this happened, a range is shown and the row is flagged. Recommend cross-checking against the latest AMC factsheet before acting on any single number. See the <b>Scoring Transparency</b> tab for full source detail.</p>
+
+<nav class="tabs" id="tabNav">
+  <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+  <button class="tab-btn" data-tab="performance">📈 Performance</button>
+  <button class="tab-btn" data-tab="allocation">🗂 Allocation</button>
+  <button class="tab-btn" data-tab="action">⚡ Action</button>
+  <button class="tab-btn" data-tab="scoring">🔍 Scoring Transparency</button>
+  <button class="tab-btn" data-tab="nominee">👤 Nominee</button>
+</nav>
+
+<!-- ============ TAB 1: OVERVIEW ============ -->
+<section class="tabpanel active" id="tab-overview">
+
+  <div class="cards">
+    <div class="card"><div class="label">Total Invested</div><div class="value">₹41,07,795</div></div>
+    <div class="card"><div class="label">Current Value</div><div class="value green">₹47,03,419</div></div>
+    <div class="card"><div class="label">Absolute Gain</div><div class="value green">+₹5,95,625</div></div>
+    <div class="card"><div class="label">Profit %</div><div class="value green">+14.5%</div></div>
+    <div class="card"><div class="label">Portfolio XIRR</div><div class="value amber">9.38%</div></div>
+    <div class="card"><div class="label">Holdings / AMCs</div><div class="value">9 / 7</div></div>
+  </div>
+
+  <div class="section">
+    <h2>🎯 Portfolio Score</h2>
+    <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+      <div style="font-size:42px;font-weight:800;color:var(--amber);">5.2<span style="font-size:18px;color:var(--muted);">/10</span></div>
+      <div style="flex:1;min-width:240px;">
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:52%"></div></div>
+        <div class="muted small">Moderate score — solid underlying fund quality (all Direct plans, mostly low-cost, stable managers) is being pulled down by <b style="color:var(--text)">portfolio construction issues</b>: a 2x breach of the sectoral cap, a single fund over 20% of the portfolio, top-3 funds over 50%, and three AMCs accounting for ~88% of assets. See <b>🔍 Scoring Transparency</b> for the full build.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="section">
+      <h2>⚖️ Portfolio Risk Snapshot</h2>
+      <p><span class="badge red">AGGRESSIVE</span></p>
+      <p class="muted small">Rationale: 20.9% concentrated in a single IT-sector fund (2x the 10% sectoral guardrail), 9.7–12.9% in two funds making an almost identical Greater-China/Hong Kong/Taiwan single-country bet, 18.7% in mid-caps, and 15.6% in a gold-silver commodity FoF. Every individual scheme in this portfolio carries a "Very High" risk rating from data providers, and 87.7% of assets sit with just 3 fund houses.</p>
+    </div>
+    <div class="section">
+      <h2>🌱 Plan & Structure Check</h2>
+      <p><span class="badge green">✓ 100% Direct Plans</span> <span class="badge green">✓ 100% Growth Option</span></p>
+      <p class="muted small">Good news: every holding in this statement is already a <b>Direct</b> plan and <b>Growth</b> option — no Regular-plan cost drag and no dividend (IDCW) leakage from compounding. No "Move to Direct" action is needed here.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🛠 Top 5 Improvements</h2>
+    <ol class="toplist">
+      <li><span class="tag High">High</span> &nbsp;<b>Trim Tata Digital India Fund</b> (20.9% combined across 2 folios, vs 10% sectoral cap) — recent 1Y return is sharply negative on most sources (~‑18%) and Sharpe ratio is negative (‑0.26).</li>
+      <li><span class="tag High">High</span> &nbsp;<b>Consolidate the two Greater-China funds</b> (Edelweiss + Axis) — near-identical China/Hong Kong/Taiwan exposure held twice; Axis is the cheaper of the two on most sources.</li>
+      <li><span class="tag Medium">Medium</span> &nbsp;<b>Trim Kotak Nifty Next 50 Index Fund</b> (32.4% in a single fund, vs the 20% single-fund guardrail) — excellent low-cost fund, but oversized as one position.</li>
+      <li><span class="tag Medium">Medium</span> &nbsp;<b>Consolidate Tata Digital India folios</b> (9277888 &amp; 5431548 — same scheme, two folios) with the RTA for simpler tracking.</li>
+      <li><span class="tag Low">Low</span> &nbsp;<b>Add nominee details</b> — no nominee information was present anywhere in this statement export; confirm directly with each AMC/RTA or via MF Central.</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h3 style="margin-top:0">Holding-level snapshot</h3>
+    <table>
+      <thead><tr><th>Scheme</th><th>Category</th><th class="right">Invested</th><th class="right">Current</th><th class="right">XIRR</th><th class="right">% of Portfolio</th></tr></thead>
+      <tbody id="overviewHoldingsBody"></tbody>
+    </table>
+  </div>
+
+</section>
+
+<!-- ============ TAB 2: PERFORMANCE ============ -->
+<section class="tabpanel" id="tab-performance">
+
+  <div class="controls">
+    <select id="perfAmcFilter"><option value="">All AMCs</option></select>
+    <select id="perfCatFilter"><option value="">All Categories</option></select>
+    <button class="btn" id="perfShowTop5">Show Top 5</button>
+    <button class="btn active" id="perfShowAll">Show All</button>
+    <button class="btn" id="perfReset">Reset Filters</button>
+  </div>
+
+  <div class="grid2" style="margin-bottom:18px;">
+    <div class="section">
+      <h3 style="margin-top:0">🏆 Top performers (by XIRR)</h3>
+      <ol class="toplist" id="topPerformersList"></ol>
+    </div>
+    <div class="section">
+      <h3 style="margin-top:0">⚠️ Weakest performers (by XIRR)</h3>
+      <ol class="toplist" id="weakPerformersList"></ol>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 style="margin-top:0">📈 Fund-wise performance (click headers to sort, click a row to expand)</h2>
+    <table id="perfTable">
+      <thead><tr>
+        <th data-key="scheme">Scheme</th>
+        <th data-key="amc">AMC</th>
+        <th data-key="category">Category</th>
+        <th data-key="pctPortfolio" class="right">% Portfolio</th>
+        <th data-key="xirrNum" class="right">XIRR</th>
+        <th data-key="return1Y" class="right">1Y Ret.</th>
+        <th data-key="return3Y" class="right">3Y Ret.</th>
+        <th data-key="return5Y" class="right">5Y Ret.</th>
+        <th data-key="expRatio" class="right">Exp. Ratio (Dir.)</th>
+        <th data-key="score" class="right">Score</th>
+        <th>Freshness</th>
+      </tr></thead>
+      <tbody id="perfTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>🔬 Cost, Manager &amp; Track-Record Trend Flags</h2>
+    <table>
+      <thead><tr><th>Scheme</th><th>Manager Tenure</th><th>NFO / Track-record Flag</th><th>AUM Trend</th><th>Expense Trend</th></tr></thead>
+      <tbody id="trendFlagsBody"></tbody>
+    </table>
+  </div>
+
+</section>
+
+<!-- ============ TAB 3: ALLOCATION ============ -->
+<section class="tabpanel" id="tab-allocation">
+
+  <div class="grid2">
+    <div class="section">
+      <h2 style="margin-top:0">Asset Class / Sub-Category Breakdown</h2>
+      <table>
+        <thead><tr><th>Sub-Category</th><th class="right">% Invested</th><th class="right">% Current</th><th>Guardrail</th></tr></thead>
+        <tbody id="categoryBreakdownBody"></tbody>
+      </table>
+    </div>
+    <div class="section">
+      <h2 style="margin-top:0">Fund House (AMC) Concentration</h2>
+      <table>
+        <thead><tr><th>AMC</th><th class="right">% of Portfolio</th><th></th></tr></thead>
+        <tbody id="amcConcentrationBody"></tbody>
+      </table>
+      <p class="muted small" style="margin-top:10px">⚠ <b style="color:var(--text)">Top-3 AMC concentration: 87.7%</b> (Tata MF 39.7% + Kotak Mahindra MF 32.4% + Motilal Oswal MF 15.6%). Top-3 funds alone account for <b style="color:var(--text)">72.1%</b> of invested value — above the informal 50% "top-3 funds" watch threshold.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🚧 Category Guardrail Compliance</h2>
+    <table>
+      <thead><tr><th>Guardrail</th><th class="right">Cap</th><th class="right">Current</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Thematic / Sectoral exposure</td><td class="right">≤ 10% of equity sleeve</td><td class="right">20.9%</td><td><span class="tag High">⚠ BREACH — 2.09×</span></td></tr>
+        <tr><td>Small-cap exposure</td><td class="right">≤ 20% (warn &gt;25%)</td><td class="right">0% (no dedicated small-cap fund)</td><td><span class="tag Low">✓ Compliant</span></td></tr>
+        <tr><td>International equity exposure</td><td class="right">≤ 15%</td><td class="right">9.7% invested / 12.9% current</td><td><span class="tag Low">✓ Compliant on paper</span></td></tr>
+        <tr><td>Single fund exposure</td><td class="right">≤ 20% of portfolio</td><td class="right">32.4% (Kotak Nifty Next 50)</td><td><span class="tag High">⚠ BREACH</span></td></tr>
+        <tr><td>Top-3 funds exposure</td><td class="right">≤ 50% of portfolio</td><td class="right">72.1%</td><td><span class="tag High">⚠ BREACH</span></td></tr>
+      </tbody>
+    </table>
+    <p class="muted small" style="margin-top:10px"><b style="color:var(--amber)">Hidden overlap note:</b> the 9.7–12.9% "International" allocation is technically within its cap, but it is split across <b>two funds making the same country bet</b> (Edelweiss → JPMorgan JF Greater China Equity Fund; Axis → Schroder ISF Greater China) — both are 100% China/Hong Kong/Taiwan equity. There is no genuine geographic diversification benefit from holding both.</p>
+  </div>
+
+  <div class="section">
+    <h2>🔗 Overlap &amp; Duplicated Exposure</h2>
+    <table>
+      <thead><tr><th>Fund Pair / Item</th><th>Overlap Type</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Edelweiss Greater China Equity Offshore Fund ↔ Axis Greater China Equity FoF</td><td><span class="tag High">Hidden thematic overlap — High</span></td><td>Both are India-domiciled FoFs investing into a single-country (China/HK/Taiwan) offshore equity fund. Near-total geographic/theme overlap despite different underlying managers (JPMorgan vs Schroder).</td></tr>
+        <tr><td>Tata Digital India Fund — Folio 9277888 ↔ Folio 5431548</td><td><span class="tag Medium">Same-scheme multi-folio</span></td><td>Identical scheme held under two folios — not cross-fund overlap, but a hygiene/consolidation issue (see Item 39 in Action tab).</td></tr>
+        <tr><td>Tata Mid Cap Fund ↔ Tata Digital India Fund ↔ Mahindra Manulife Focused Fund</td><td><span class="tag Low">Stock-level overlap — Low/Unconfirmed</span></td><td>Top-holdings data for each fund was reviewed; no major common large positions stood out (Tata Mid Cap leans Financials/Pharma/Industrials; Tata Digital India is IT-only; Mahindra Manulife Focused holds large private banks + Reliance). Full stock-by-stock overlap % was not separately computed — flagged ⚠ as a data-confidence-capped estimate.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>🗳 Dividend vs Growth &amp; Multi-Folio Check</h2>
+    <p><span class="badge green">✓ All 9 holdings are Growth-option</span> — no IDCW/dividend plans found, so no compounding leakage.</p>
+    <p style="margin-top:10px"><span class="badge amber">⚠ Multi-folio scheme detected</span> — <b>Tata Digital India Fund Direct Growth</b> is held under <b>Folio 9277888</b> (₹8,19,958.97 invested) and <b>Folio 5431548</b> (₹39,998 invested). Recommend consolidating with Tata AMC/RTA for simpler tracking — see Action tab.</p>
+  </div>
+
+</section>
+
+<!-- ============ TAB 4: ACTION ============ -->
+<section class="tabpanel" id="tab-action">
+
+  <div class="controls">
+    <select id="actionPriorityFilter">
+      <option value="">All Priorities</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+    </select>
+    <select id="actionTypeFilter"><option value="">All Action Types</option></select>
+    <button class="btn" id="actionReset">Reset Filters</button>
+  </div>
+
+  <div id="actionCards"></div>
+
+</section>
+
+<!-- ============ TAB 5: SCORING TRANSPARENCY ============ -->
+<section class="tabpanel" id="tab-scoring">
+
+  <div class="section">
+    <h2 style="margin-top:0">Layer A — Source Trust (T1–T4 legend)</h2>
+    <div class="legend-grid">
+      <div class="legend-item"><b style="color:var(--green)">T1 — Highest trust</b>AMC factsheets · AMFI official · MF Central / CAS · SEBI filings</div>
+      <div class="legend-item"><b style="color:var(--cyan)">T2 — High trust (aggregators)</b>Value Research · Morningstar India · Moneycontrol · ET Money · INDmoney</div>
+      <div class="legend-item"><b style="color:var(--amber)">T3 — Moderate trust</b>Groww, Paytm Money, Zerodha Coin, BankBazaar and similar broker/platform pages</div>
+      <div class="legend-item"><b style="color:var(--red)">T4 — Supplementary, use with caution</b>News articles, management commentary, general financial media</div>
+    </div>
+    <p class="muted small">Portfolio-wide tier mix for this report: approximately <b style="color:var(--text)">35% T1, 45% T2, 18% T3, 2% T4</b>. Category/benchmark classification and AMC-published figures (Mahindra Manulife, Tata Digital India, Kotak Nifty Next 50, Axis Greater China) were confirmed directly from AMC factsheets (T1). Several return and expense-ratio figures relied on T2/T3 aggregators that disagreed with each other — these are flagged ⚠ below and in the Performance tab.</p>
+  </div>
+
+  <div class="section">
+    <h2>Per-fund source-tier breakdown</h2>
+    <table>
+      <thead><tr><th>Scheme</th><th>Category/Benchmark</th><th>Returns</th><th>Expense Ratio</th><th>AUM</th></tr></thead>
+      <tbody id="sourceTierBody"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Layer B — Score Build</h2>
+    <p class="muted small">Formula: <b style="color:var(--text)">Final Score = (Tier 1 × 50%) + (Tier 2 × 35%) + (Tier 3 × 15%) − Risk Penalty − Missing-Data Penalty</b></p>
+    <table>
+      <thead><tr><th>Component</th><th class="right">Score /10</th><th class="right">Weight</th><th class="right">Contribution</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Tier 1 — Core Decision Metrics</td><td class="right">5.5</td><td class="right">50%</td><td class="right">2.75</td><td>Returns/cost reasonable per fund, but overlap, concentration and a 2× sectoral-cap breach drag this down heavily.</td></tr>
+        <tr><td>Tier 2 — Diagnostic Metrics</td><td class="right">7.0</td><td class="right">35%</td><td class="right">2.45</td><td>All Direct plans, low-ish costs, stable manager tenures, no NFOs — but every fund carries "Very High" risk rating.</td></tr>
+        <tr><td>Tier 3 — Context Metrics</td><td class="right">6.0</td><td class="right">15%</td><td class="right">0.90</td><td>Quant MF's unresolved SEBI front-running inquiry (since mid-2024) is a governance overhang on the ELSS holding.</td></tr>
+        <tr><td colspan="3" class="right"><b>Subtotal</b></td><td class="right"><b>6.10</b></td><td></td></tr>
+        <tr><td>Risk Penalty</td><td class="right">−0.70</td><td></td><td class="right">−0.70</td><td>Sectoral cap breach (2.09×), single-fund breach (32.4%), top-3-fund breach (72.1%), AMC concentration (87.7%).</td></tr>
+        <tr><td>Missing-Data Penalty</td><td class="right">−0.20</td><td></td><td class="right">−0.20</td><td>No purchase-date column in statement; tracking error, rating-trend and rolling-return-consistency data unavailable for all 8 schemes; wide cross-source variance on several return/expense figures.</td></tr>
+        <tr><td colspan="3" class="right"><b>Final Adjusted Score</b></td><td class="right"><b style="color:var(--amber);font-size:16px">5.20 / 10</b></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Data Gap Log</h2>
+    <table>
+      <thead><tr><th>Scheme</th><th>Missing Metric</th><th>Reason</th><th>Suggested Source</th></tr></thead>
+      <tbody>
+        <tr><td>All 9 holdings</td><td>Purchase / lot date</td><td>Not a column in this uploaded statement (only XIRR was provided pre-calculated)</td><td>MF Central consolidated statement or CAS PDF</td></tr>
+        <tr><td>All 9 holdings</td><td>Nominee details</td><td>Not present anywhere in this export</td><td>MF Central / AMC folio servicing page</td></tr>
+        <tr><td>Kotak Nifty Next 50 Index Fund</td><td>Tracking error</td><td>Not surfaced in the AMC factsheet snippet retrieved</td><td>Kotak MF factsheet (T1)</td></tr>
+        <tr><td>All 8 schemes</td><td>Rating-trend (upgrade/downgrade history)</td><td>Aggregators show current rating only, not historical trend</td><td>Value Research / Morningstar fund history (T2)</td></tr>
+        <tr><td>All 8 schemes</td><td>Rolling 3-yr return consistency vs category</td><td>Not surfaced in available search results</td><td>Value Research Fund Advisor rolling-return tool (T2)</td></tr>
+        <tr><td>Edelweiss Greater China, Tata Mid Cap, Tata Digital India, Axis Greater China, MO Gold-Silver FoF</td><td>1Y/3Y return figures</td><td>T2/T3 sources disagreed materially (e.g. 3Y return shown as anywhere from 8% to 97% for different funds depending on the aggregator/date) — likely a mix of CAGR vs cumulative-return reporting across sites</td><td>AMC factsheet SEBI-format returns table (T1)</td></tr>
+        <tr><td>Edelweiss Greater China, Tata Digital India, MO Gold-Silver FoF, Kotak Nifty Next 50</td><td>Expense ratio (Direct)</td><td>Sources showed a wide range, possibly mixing Direct/Regular figures from different dates</td><td>Respective AMC factsheet (T1)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<!-- ============ TAB 6: NOMINEE ============ -->
+<section class="tabpanel" id="tab-nominee">
+  <div class="section">
+    <h2 style="margin-top:0">👤 Nominee Completeness Check</h2>
+    <p><span class="badge red">⚠ 0% of folios show nominee data</span></p>
+    <p class="muted small">This statement export (a consolidated holdings sheet, likely sourced via Groww/MF Central aggregation) does not include a nominee column for any of the 6 distinct folios in this portfolio. This does <b>not necessarily mean</b> nominee details are missing at the AMC/RTA level — many aggregator exports simply don't carry that field — but it cannot be confirmed as present from this document either.</p>
+    <table>
+      <thead><tr><th>Folio No.</th><th>AMC</th><th>Schemes in Folio</th><th>Nominee Status</th></tr></thead>
+      <tbody id="nomineeBody"></tbody>
+    </table>
+    <p class="muted small" style="margin-top:14px"><b style="color:var(--text)">Recommended action:</b> Log into MF Central (mfcentral.com) or each AMC's investor portal and confirm/add a nominee for every folio. This is a basic estate-planning hygiene check that is independent of fund performance.</p>
+  </div>
+</section>
+
+<footer>
+  <h4>SECTION A — Investment Disclaimer</h4>
+  <p>This report is for educational and informational purposes only and does not constitute investment advice, a recommendation to buy or sell mutual fund units, or a solicitation of any offer. This is NOT a SEBI-registered research report. Investors should conduct their own due diligence and consult a SEBI-registered investment advisor or financial planner before making investment decisions. Past performance is not indicative of future results. All data sourced from public domains (AMFI, AMC factsheets, MF Central, and third-party aggregators). The author is not responsible for investment outcomes based on this report.</p>
+
+  <h4>SECTION B — AI Disclosure</h4>
+  <p>⚠ This report was generated using Claude AI (Anthropic), powered by the Mutual Fund Portfolio Dashboard skill. Risks to be aware of:</p>
+  <p>1. <b>Hallucination risk:</b> AI language models can generate plausible-sounding but factually incorrect information. All financial figures should be independently verified from primary sources (AMFI, AMC factsheet, MF Central) before being relied upon.<br>
+  2. <b>Data currency:</b> AI models have knowledge cutoffs; always check the report generation date and verify recency of all data from official sources.<br>
+  3. <b>Web search limitations:</b> Live web search results can be incomplete, delayed, or sourced from lower-quality sites. Source tiers (T1–T4) shown for each data point indicate relative confidence.<br>
+  4. <b>Not a substitute for professional advice:</b> this analysis is a supplementary tool only — it does not replace registered research or advice from a licensed investment advisor.<br>
+  5. <b>No liability:</b> the AI, the skill author, and Anthropic accept no liability for financial losses arising from reliance on this AI-generated report.</p>
+
+  <h4>SECTION C — Report Attribution</h4>
+  <p>Research skill designed by: <b style="color:var(--text)">Kushal Lunia</b> — CA Finalist | Internal Audit &amp; Financial Reporting | Ex-EY (Big 4) &amp; Ex-UBS<br>
+  Data Analytics: Alteryx · Power BI · Excel · Power Query<br>
+  🔗 <a href="https://www.linkedin.com/in/kushal-lunia-7b9585138/" target="_blank">linkedin.com/in/kushal-lunia-7b9585138</a></p>
+  <p>AI Engine: Claude (Anthropic) · Report generated: 18-Jun-2026 · Market: INDIA (Mutual Funds) · Currency: INR<br>
+  Data confidence: 5.2/10 (Moderate) · Latest Statement Date: 17-Jun-2026 · Missing Data Count: 9 of 9 holdings (purchase dates), 6 of 6 folios (nominee)</p>
+</footer>
+
+</div>
+
+<script>
+// ================= DATA =================
+const FUNDS = [
+  {
+    id:'quant_elss', scheme:'Quant ELSS Tax Saver Fund Direct Growth', amc:'Quant Mutual Fund',
+    category:'ELSS (Tax Saving)', amfiCategory:'Equity - ELSS', benchmark:'Nifty 500 TRI (default — not explicitly confirmed) ⚠',
+    folios:['51078844884'], invested:77995.92, current:86656.50, returnsAbs:8660.58, xirr:'7.78%', xirrNum:7.78,
+    pctPortfolio:1.90, expRatioLabel:'0.61% (range 0.50–0.81% across sources) ⚠', expRatio:0.61, expTier:'T2',
+    aum:'~₹12,500 Cr (range ₹9,486–13,070 Cr across sources)', aumTier:'T2',
+    manager:'Sandeep Tandon (founder/CIO) + 6-member team', managerTenure:'13 yrs (since 2013 launch) — stable',
+    inception:'01-Jan-2013', nfo:false, risk:'Very High', rating:'5★ (T3 source)',
+    return1Y:'9.93–11.43% ⚠', return3Y:'19.43–19.63% ⚠', return5Y:'15.64–16.59%',
+    sharpe:'Not found ⚠', stdDev:'Not found ⚠',
+    topHoldings:'Not retrieved in this pass — quant/VLRT model-driven, high churn style',
+    attribution:'Reasonable long-term CAGR but 1Y/3Y figures vary across sources. Quant Mutual Fund has an unresolved SEBI front-running inquiry open since mid-2024 (search-and-seizure at HQ); resolution status could not be confirmed as of this report — a Tier-3 governance flag, not a fund-performance issue. 3-year ELSS lock-in also limits any near-term action regardless.',
+    score:6.5, freshness:'moderate',
+    flags:['Returns data variance across sources ⚠','AMC-level SEBI inquiry (governance) ⚠','Rating-trend data unavailable ⚠','3-yr statutory lock-in — limited actionability']
+  },
+  {
+    id:'mahindra_focused', scheme:'Mahindra Manulife Focused Fund Direct Growth', amc:'Mahindra Manulife Mutual Fund',
+    category:'Focused Fund (statement labelled "Flexi Cap" — mismatch vs AMFI category) ⚠', amfiCategory:'Equity - Focused Fund',
+    benchmark:'Nifty 500 TRI (confirmed — AMC factsheet, T1)',
+    folios:['1000243890'], invested:29998.50, current:89046.35, returnsAbs:59047.85, xirr:'21.51%', xirrNum:21.51,
+    pctPortfolio:0.73, expRatioLabel:'0.41–0.56% (Direct) ⚠ minor variance', expRatio:0.48, expTier:'T2',
+    aum:'~₹2,000–2,200 Cr', aumTier:'T1/T2',
+    manager:'Krishna Sanghavi + Fatema Pacha', managerTenure:'~5.5 yrs (since Nov 2020) — stable',
+    inception:'17-Nov-2020', nfo:false, risk:'Very High', rating:'Not found ⚠',
+    return1Y:'10.13–14.86%', return3Y:'19.64–20.47%', return5Y:'18.45–18.49%',
+    sharpe:'Not found ⚠', stdDev:'Not found ⚠',
+    topHoldings:'ICICI Bank, SBI, Reliance Industries, Infosys, Indus Towers (concentrated, max 30 stocks mandate)',
+    attribution:'Highest XIRR (21.51%) in the entire portfolio. Outperformed its Nifty 500 benchmark over 3Y and 5Y per INDmoney, though it underperformed over the most recent 1Y. Stable management team, reasonable Direct-plan cost, and currently <1% of the portfolio — a clear under-allocation relative to its track record.',
+    score:8.0, freshness:'current',
+    flags:['Statement sub-category label ("Flexi Cap") does not match actual AMFI category ("Focused Fund") ⚠','Concentrated 30-stock mandate — single-stock risk higher than a diversified fund']
+  },
+  {
+    id:'edelweiss_china', scheme:'Edelweiss Greater China Equity Offshore Fund Direct Growth', amc:'Edelweiss Mutual Fund',
+    category:'International (FoF) — Greater China', amfiCategory:'Equity - International / FoF (Overseas)',
+    benchmark:'Ambiguous across sources (reported vs "Global – Other Index") ⚠ — true mandate is Greater China equity',
+    folios:['91026347995'], invested:199990.01, current:320920.00, returnsAbs:120929.99, xirr:'31.99%', xirrNum:31.99,
+    pctPortfolio:4.87, expRatioLabel:'0.75–1.49% ⚠ wide variance', expRatio:1.10, expTier:'T2',
+    aum:'~₹2,700–3,150 Cr (varies by date)', aumTier:'T2',
+    manager:'Bhavesh Jain + Bharat Lahoti', managerTenure:'~8 yrs (since 2018) — stable',
+    inception:'01-Jan-2013', nfo:false, risk:'Very High', rating:'Not found ⚠',
+    return1Y:'61.02–69.73% ⚠', return3Y:'23.03–97.34% ⚠ (very wide — likely CAGR vs cumulative mix-up across sites)', return5Y:'3.70–4.47%',
+    sharpe:'Not found ⚠', stdDev:'Not found ⚠',
+    topHoldings:'Invests into JPMorgan Funds – JF Greater China Equity Fund (China/Hong Kong/Taiwan equities)',
+    attribution:'Huge recent 1Y rally (China tech/stimulus-driven) but weak 5Y CAGR (~4%) shows most of the gain is very recent. Higher cost than its closest in-portfolio peer (Axis Greater China FoF). Combined with Axis, this doubles a single-country (China) bet without adding real diversification.',
+    score:6.0, freshness:'moderate',
+    flags:['Wide cross-source variance on 1Y/3Y returns ⚠','Wide cross-source variance on expense ratio ⚠','Hidden overlap with Axis Greater China FoF — same country/theme']
+  },
+  {
+    id:'tata_midcap', scheme:'Tata Mid Cap Direct Plan Growth', amc:'Tata Mutual Fund',
+    category:'Mid Cap', amfiCategory:'Equity - Mid Cap', benchmark:'Nifty Midcap 150 TRI (confirmed, T2)',
+    folios:['9277888'], invested:769961.61, current:891792.06, returnsAbs:121830.45, xirr:'9.07%', xirrNum:9.07,
+    pctPortfolio:18.74, expRatioLabel:'0.57–0.95% ⚠ moderate variance', expRatio:0.68, expTier:'T2',
+    aum:'~₹5,600–5,730 Cr', aumTier:'T2',
+    manager:'Satish Chandra Mishra (+ Abhinav Sharma per one source)', managerTenure:'13 yrs (since 2013) — stable',
+    inception:'01-Jan-2013', nfo:false, risk:'Very High', rating:'Not found ⚠',
+    return1Y:'3.74–4.28%', return3Y:'19.28% (one source showed 67.01% — likely cumulative not annualised) ⚠', return5Y:'17.21%',
+    sharpe:'Not found ⚠', stdDev:'Not found ⚠',
+    topHoldings:'Mankind Pharma, Federal Bank, BHEL, BSE Ltd, Max Financial Services',
+    attribution:'Solid long-term 5Y CAGR (~17%), reasonable cost, long-tenured manager. Outperformed its benchmark over 1Y and 5Y windows but lagged over 3Y per INDmoney — a mixed but broadly acceptable mid-cap holding. At 18.7% of the portfolio it sits just under the informal single-fund concentration line.',
+    score:7.0, freshness:'current',
+    flags:['3Y return figure shows large cross-source discrepancy ⚠']
+  },
+  {
+    id:'tata_digital', scheme:'Tata Digital India Fund Direct Growth', amc:'Tata Mutual Fund',
+    category:'Sectoral — Technology/IT', amfiCategory:'Equity - Sectoral (Technology)',
+    benchmark:'Nifty IT TRI (likely; one source benchmarked it against Nifty 500 — ambiguous) ⚠',
+    folios:['9277888','5431548'], invested:859956.97, current:787087.68, returnsAbs:-72869.29, xirr:'Blended ≈ ‑6.7% (Folio 9277888: ‑10.92%, Folio 5431548: +13.75%)', xirrNum:-6.7,
+    pctPortfolio:20.93, expRatioLabel:'0.36–0.56% ⚠ variance', expRatio:0.50, expTier:'T1/T2',
+    aum:'~₹9,200–12,000 Cr (T1 AMC site ≈ ₹9,200 Cr most recently)', aumTier:'T1',
+    manager:'Meeta Shetty (CFA, since ~2017) + Hasmukh Vishariya', managerTenure:'~9 yrs — stable, experienced',
+    inception:'28-Dec-2015', nfo:false, risk:'Very High', rating:'Not found ⚠',
+    return1Y:'‑18.28% to ‑18.37% (one outlier source: ‑4.91%) ⚠', return3Y:'8.04–27.16% ⚠ wide variance', return5Y:'8.96–10.67%',
+    sharpe:'‑0.26 (negative — poor recent risk-adjusted return)', stdDev:'17.89 (high volatility)',
+    topHoldings:'PB Fintech, Firstsource Solutions, Zensar Tech, Netweb Technologies, Hexaware Tech',
+    attribution:'The single biggest drag in the portfolio. IT sector underperformance over the past year shows up clearly: negative 1Y returns across nearly every source, a negative Sharpe ratio, and high volatility (std. dev ~18). Combined across its two folios this is 20.9% of the portfolio — more than double the 10% sectoral guardrail. Analyst commentary (Scripbox) explicitly cautions that sector-fund investors need strong conviction and active monitoring; this is the clearest "reduce" candidate in the book.',
+    score:4.0, freshness:'current',
+    flags:['SECTORAL GUARDRAIL BREACH — 20.9% vs 10% cap (2.09×) ⚠','Negative 1Y return + negative Sharpe ratio','Multi-folio: same scheme held in folio 9277888 and 5431548','Wide cross-source variance on 3Y return ⚠']
+  },
+  {
+    id:'kotak_nn50', scheme:'Kotak Nifty Next 50 Index Fund Direct Growth', amc:'Kotak Mahindra Mutual Fund',
+    category:'Index — Large Cap (Next 50)', amfiCategory:'Equity - Index Fund', benchmark:'Nifty Next 50 TRI (confirmed, T1 AMC)',
+    folios:['8743415'], invested:1329933.59, current:1519650.85, returnsAbs:189717.27, xirr:'10.19%', xirrNum:10.19,
+    pctPortfolio:32.38, expRatioLabel:'0.10–0.51% ⚠ (AMC figure includes BER+GST; aggregator figures lower)', expRatio:0.30, expTier:'T1',
+    aum:'~₹850–1,160 Cr', aumTier:'T1',
+    manager:'Satish Dondapati + Jeetu Valechha Sonar', managerTenure:'~5.25 yrs (since Mar 2021) — stable passive team',
+    inception:'10-Mar-2021', nfo:false, risk:'Very High', rating:'Not found ⚠',
+    return1Y:'9.96–10.19%', return3Y:'20.20%', return5Y:'13.49–15.45%',
+    sharpe:'Not found ⚠', stdDev:'Not found ⚠',
+    topHoldings:'Replicates Nifty Next 50 index (next 51–100 by market cap) — no single-stock dominance by design',
+    attribution:'A genuinely good, low-cost, well-run index fund tracking its benchmark closely (as expected for a passive product) — there is no fund-quality problem here. The issue is purely sizing: at 32.4% of the entire portfolio it is the single largest position by a wide margin, breaching the informal 20% single-fund concentration guardrail.',
+    score:7.5, freshness:'current',
+    flags:['SINGLE-FUND CONCENTRATION BREACH — 32.4% vs 20% guardrail ⚠','Tracking error data unavailable ⚠']
+  },
+  {
+    id:'axis_china', scheme:'Axis Greater China Equity FoF Direct Growth', amc:'Axis Mutual Fund',
+    category:'International (FoF) — Greater China', amfiCategory:'Equity - International / FoF (Overseas)',
+    benchmark:'MSCI Golden Dragon Index (confirmed, T1 AMC site)',
+    folios:['910191638643'], invested:199990.00, current:283967.49, returnsAbs:83977.49, xirr:'22.88%', xirrNum:22.88,
+    pctPortfolio:4.87, expRatioLabel:'0.34–0.52% ⚠ minor variance', expRatio:0.43, expTier:'T1/T2',
+    aum:'~₹3,050–4,170 Cr (growing — China rally tailwind)', aumTier:'T1',
+    manager:'Krishnaa Narayan (since Mar 2024)', managerTenure:'~2.3 yrs — past a manager change, now settled',
+    inception:'10-Feb-2021', nfo:false, risk:'Very High', rating:'Not found ⚠',
+    return1Y:'45.79–62.13% ⚠', return3Y:'22.76–71.17% ⚠ very wide variance', return5Y:'6.56% (one source)',
+    sharpe:'Not found ⚠', stdDev:'Not found ⚠',
+    topHoldings:'Invests into Schroder International Selection Fund – Greater China (China/Hong Kong/Taiwan equities)',
+    attribution:'Cheaper of the two Greater-China funds in this portfolio (0.34–0.52% vs Edelweiss\'s 0.75–1.49%), with a clearly-confirmed T1 benchmark (MSCI Golden Dragon). Strong recent rally mirrors Edelweiss\'s pattern for the same underlying reason: China/Taiwan equity strength over the past year. Manager changed in March 2024 but has now been in seat over 2 years.',
+    score:6.8, freshness:'current',
+    flags:['Hidden overlap with Edelweiss Greater China — same country/theme bet','Wide cross-source variance on 1Y/3Y returns ⚠']
+  },
+  {
+    id:'mo_goldsilver', scheme:'Motilal Oswal Gold and Silver Passive FoF Direct Growth', amc:'Motilal Oswal Mutual Fund',
+    category:'Commodities — Gold & Silver', amfiCategory:'Other Scheme - FoF (Domestic) - Gold/Silver',
+    benchmark:'Composite domestic gold + silver price (no single TRI) ⚠ ambiguous',
+    folios:['910117718484'], invested:639967.99, current:724298.44, returnsAbs:84330.45, xirr:'37.86%', xirrNum:37.86,
+    pctPortfolio:15.58, expRatioLabel:'0.13–0.70% ⚠ very wide variance (possible Direct/Regular mix-up across sources)', expRatio:0.40, expTier:'T2',
+    aum:'~₹1,200–2,700 Cr (rapidly growing — gold/silver rally inflows)', aumTier:'T2',
+    manager:'Rakesh Shetty + Swapnil Mayekar', managerTenure:'~3.5–4 yrs (since Oct/Nov 2022) — stable',
+    inception:'14-Oct-2022', nfo:false, risk:'Very High', rating:'Not found ⚠',
+    return1Y:'73.78–99.29% ⚠ (gold/silver rally)', return3Y:'35.82–151.20% ⚠ very wide variance', return5Y:'N/A — fund is under 5 yrs old',
+    sharpe:'Not found ⚠', stdDev:'Not found ⚠',
+    topHoldings:'~63% Motilal Oswal Gold ETF + ~39% Motilal Oswal Silver ETF (approx. 60:40 gold:silver split)',
+    attribution:'Outstanding recent returns purely tracking the gold/silver bull run of the past year — this is market-driven, not manager skill (it is a passive FoF). At 15.6% of the portfolio it is a meaningfully large single-asset-class commodity bet; no formal guardrail exists for commodities in this framework, but the position size and rapid AUM growth (inflow-chasing-performance pattern) both warrant a profit-booking/rebalancing discipline check rather than further additions at current levels.',
+    score:7.2, freshness:'moderate',
+    flags:['Rapid AUM growth (rally-driven inflows) ⚠','Very wide cross-source variance on expense ratio and returns ⚠','Just past the 3-yr mark — still a relatively short track record']
+  }
+];
+
+const ACTIONS = [
+  {fund:'Tata Digital India Fund Direct Growth (both folios)', action:'Reduce', priority:'High', confidence:'High',
+   reason:'20.9% combined allocation breaches the 10% sectoral guardrail by more than 2×. 1Y return is sharply negative on nearly every source (~‑18%), and Sharpe ratio is negative (‑0.26), indicating poor recent risk-adjusted performance.',
+   suggested:'Trim to ≤10% of portfolio (~₹4.3L from the current ~₹8.6L invested); redeploy proceeds into a diversified equity category (e.g. Flexicap/Multicap) rather than another single-sector bet.',
+   switchCost:true},
+  {fund:'Tata Digital India Fund Direct Growth', action:'Consolidate folios', priority:'Medium', confidence:'High',
+   reason:'Same scheme is held under Folio 9277888 (₹8,19,958.97) and Folio 5431548 (₹39,998) — a multi-folio hygiene issue, distinct from the cross-fund overlap above.',
+   suggested:'Contact Tata AMC/RTA (CAMS) to merge the two folios into one for simpler future tracking. No cost/overlap math needed for this step.',
+   switchCost:false},
+  {fund:'Edelweiss Greater China Equity Offshore Fund Direct Growth', action:'Consolidate / Swap', priority:'Medium', confidence:'Moderate',
+   reason:'Both Edelweiss and Axis Greater China funds deliver near-identical China/Hong Kong/Taiwan exposure via different underlying offshore funds (JPMorgan vs Schroder). Edelweiss carries a materially higher expense ratio across most sources (0.75–1.49%) than Axis (0.34–0.52%), and weak 5Y CAGR (~4%) versus a much stronger recent 1Y suggests most of the gain is very recent and rally-driven.',
+   suggested:'Consider consolidating this position into the existing Axis Greater China Equity FoF holding (cheaper, T1-confirmed benchmark) rather than holding both — this removes the duplicated single-country bet without giving up China/Taiwan exposure entirely.',
+   switchCost:true},
+  {fund:'Kotak Nifty Next 50 Index Fund Direct Growth', action:'Reduce', priority:'Medium', confidence:'Moderate',
+   reason:'At 32.4% of the portfolio this is comfortably the largest single holding, breaching the informal 20% single-fund concentration guardrail. The fund itself is high-quality and low-cost — this is a sizing issue, not a fund-quality issue.',
+   suggested:'Trim toward 20–25% of the portfolio; redeploy the surplus into a different equity style/category (e.g. a diversified Flexicap or a Nifty 50 fund) to reduce single-fund and single-index concentration.',
+   switchCost:true},
+  {fund:'Mahindra Manulife Focused Fund Direct Growth', action:'Add', priority:'Low', confidence:'Moderate',
+   reason:'Highest individual XIRR in the entire portfolio (21.51%), outperformed its Nifty 500 benchmark over 3Y and 5Y, stable ~5.5-year manager tenure, and a reasonable Direct-plan cost (~0.41–0.56%) — yet it is currently under 1% of the portfolio.',
+   suggested:'Consider increasing allocation modestly given the strong track record, while being mindful that a 30-stock focused mandate carries higher single-stock concentration risk than a diversified fund.',
+   switchCost:false},
+  {fund:'Tata Mid Cap Direct Plan Growth', action:'Hold', priority:'Low', confidence:'High',
+   reason:'Reasonable long-term 5Y CAGR (~17.2%), low-ish cost, a stable long-tenured manager, and a mixed-but-acceptable record versus its benchmark across different windows. Current 18.7% allocation is below the informal single-fund concentration line.',
+   suggested:'No change needed; continue to monitor 3-year rolling performance versus the Nifty Midcap 150.',
+   switchCost:false},
+  {fund:'Quant ELSS Tax Saver Fund Direct Growth', action:'Hold (locked-in)', priority:'Low', confidence:'Moderate',
+   reason:'Statutory 3-year ELSS lock-in limits any near-term action regardless of view. Long-term CAGR is respectable (~15.6–16.6% over 5Y), but Quant Mutual Fund has an unresolved SEBI front-running inquiry open since mid-2024 — a fund-house-level governance flag worth monitoring, separate from this scheme\'s own performance.',
+   suggested:'No action possible on locked units; for any fresh Section 80C allocation going forward, weigh the AMC governance overhang alongside the fund\'s strong historical numbers.',
+   switchCost:false},
+  {fund:'Motilal Oswal Gold and Silver Passive FoF Direct Growth', action:'Monitor', priority:'Low', confidence:'Moderate',
+   reason:'Outstanding recent returns (1Y ~74–99%) reflect a passive tracking of the gold/silver rally, not active skill. At 15.6% of the portfolio this is a sizeable single-asset-class commodity bet, and expense-ratio figures showed unusually wide variance across sources.',
+   suggested:'No formal guardrail is breached, but consider a profit-booking/rebalancing discipline given the sharp recent run-up, and verify the exact expense ratio directly against the Motilal Oswal AMC factsheet before any further additions.',
+   switchCost:false},
+  {fund:'Kotak Nifty Next 50 Index Fund (tracking error) / All 8 schemes (rating-trend, rolling-return consistency)', action:'Keep watching', priority:'Low', confidence:'—',
+   reason:'These are pure data-availability gaps (see Scoring Transparency → Data Gap Log), not performance concerns.',
+   suggested:'Review when the relevant AMC factsheets or Value Research pages publish the missing metrics.',
+   switchCost:false}
+];
+
+// ================= TAB SWITCHING =================
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+function inr(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); }
+function pct(n,d=2){ return n.toFixed(d)+'%'; }
+
+// ================= OVERVIEW TAB =================
+function renderOverviewHoldings(){
+  const body = document.getElementById('overviewHoldingsBody');
+  let rows = '';
+  FUNDS.forEach(f=>{
+    const folioLabel = f.folios.length>1? f.folios.join(' + ') : f.folios[0];
+    rows += `<tr>
+      <td>${f.scheme}<div class="muted small">Folio ${folioLabel}</div></td>
+      <td>${f.category.split('(')[0].split('—')[0].trim()}</td>
+      <td class="right">${inr(f.invested)}</td>
+      <td class="right">${inr(f.current)}</td>
+      <td class="right">${f.xirr}</td>
+      <td class="right">${pct(f.pctPortfolio)}</td>
+    </tr>`;
+  });
+  body.innerHTML = rows;
+}
+
+// ================= PERFORMANCE TAB =================
+let perfFilterAmc='', perfFilterCat='', perfShowMode='all';
+
+function populateFilters(){
+  const amcSel = document.getElementById('perfAmcFilter');
+  const catSel = document.getElementById('perfCatFilter');
+  const amcs = [...new Set(FUNDS.map(f=>f.amc))].sort();
+  const cats = [...new Set(FUNDS.map(f=>f.amfiCategory))].sort();
+  amcs.forEach(a=>{ const o=document.createElement('option'); o.value=a; o.textContent=a; amcSel.appendChild(o); });
+  cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
+}
+
+let perfSortKey='pctPortfolio', perfSortDir='desc';
+
+function freshnessBadge(level){
+  if(level==='current') return '<span class="badge green">≤30d</span>';
+  if(level==='moderate') return '<span class="badge amber">30–90d</span>';
+  return '<span class="badge red">&gt;90d</span>';
+}
+
+function renderPerfTable(){
+  let list = FUNDS.filter(f=>{
+    if(perfFilterAmc && f.amc!==perfFilterAmc) return false;
+    if(perfFilterCat && f.amfiCategory!==perfFilterCat) return false;
+    return true;
+  });
+  list = list.slice().sort((a,b)=>{
+    let va=a[perfSortKey], vb=b[perfSortKey];
+    if(typeof va==='string'){ va=va.toLowerCase(); vb=vb.toLowerCase(); return perfSortDir==='asc'? va.localeCompare(vb): vb.localeCompare(va); }
+    return perfSortDir==='asc'? va-vb : vb-va;
+  });
+  if(perfShowMode==='top5'){
+    list = list.slice().sort((a,b)=>b.xirrNum-a.xirrNum).slice(0,5);
+  }
+  const body = document.getElementById('perfTableBody');
+  let rows='';
+  list.forEach(f=>{
+    const xirrColor = f.xirrNum>=15?'flaggood':(f.xirrNum>=0?'':'flagbad');
+    rows += `<tr class="perf-row" data-id="${f.id}">
+      <td>${f.scheme} <span class="expand-toggle" data-id="${f.id}">[details]</span></td>
+      <td>${f.amc}</td>
+      <td>${f.category.split('—')[0].trim()}</td>
+      <td class="right">${pct(f.pctPortfolio)}</td>
+      <td class="right ${xirrColor}">${f.xirr}</td>
+      <td class="right">${f.return1Y}</td>
+      <td class="right">${f.return3Y}</td>
+      <td class="right">${f.return5Y}</td>
+      <td class="right">${f.expRatioLabel}</td>
+      <td class="right">${f.score}/10</td>
+      <td>${freshnessBadge(f.freshness)}</td>
+    </tr>
+    <tr class="fund-detail" id="detail-${f.id}">
+      <td colspan="11">
+        <div class="grid2">
+          <div>
+            <p><b>AMFI Category:</b> ${f.amfiCategory}</p>
+            <p><b>Benchmark:</b> ${f.benchmark}</p>
+            <p><b>AUM:</b> ${f.aum}</p>
+            <p><b>Manager:</b> ${f.manager} — ${f.managerTenure}</p>
+            <p><b>Inception:</b> ${f.inception} ${f.nfo? '<span class="tag High">NFO — under 3yr</span>':''}</p>
+            <p><b>Risk Rating:</b> ${f.risk} &nbsp; <b>Fund Rating:</b> ${f.rating}</p>
+          </div>
+          <div>
+            <p><b>Sharpe Ratio:</b> ${f.sharpe} &nbsp; <b>Std. Deviation:</b> ${f.stdDev}</p>
+            <p><b>Top Holdings / Underlying:</b> ${f.topHoldings}</p>
+            <p><b>Why this score — attribution:</b> ${f.attribution}</p>
+            <p><b>Flags:</b></p>
+            <ul style="margin:4px 0 0 18px;">${f.flags.map(fl=>'<li class="muted small">'+fl+'</li>').join('')}</ul>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  });
+  body.innerHTML = rows;
+  document.querySelectorAll('.expand-toggle, .perf-row').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      const id = el.dataset.id || el.closest('tr').dataset.id;
+      if(!id) return;
+      document.getElementById('detail-'+id).classList.toggle('show');
+    });
+  });
+}
+
+function renderTopWeak(){
+  const sorted = FUNDS.slice().sort((a,b)=>b.xirrNum-a.xirrNum);
+  const top3 = sorted.slice(0,3);
+  const bottom3 = sorted.slice(-3).reverse();
+  document.getElementById('topPerformersList').innerHTML = top3.map(f=>
+    `<li><b>${f.scheme}</b> — XIRR ${f.xirr} <span class="muted small">(${pct(f.pctPortfolio)} of portfolio)</span></li>`).join('');
+  document.getElementById('weakPerformersList').innerHTML = bottom3.map(f=>
+    `<li><b>${f.scheme}</b> — XIRR ${f.xirr} <span class="muted small">(${pct(f.pctPortfolio)} of portfolio)</span></li>`).join('');
+}
+
+function renderTrendFlags(){
+  const body = document.getElementById('trendFlagsBody');
+  body.innerHTML = FUNDS.map(f=>`<tr>
+    <td>${f.scheme}</td>
+    <td>${f.managerTenure}</td>
+    <td>${f.nfo? '<span class="flagbad">NFO — limited track record ⚠</span>' : '<span class="flaggood">Established (3+ yrs) ✓</span>'}</td>
+    <td>${f.aum}</td>
+    <td>${f.expRatioLabel}</td>
+  </tr>`).join('');
+}
+
+document.querySelectorAll('#perfTable th[data-key]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const key = th.dataset.key;
+    if(perfSortKey===key){ perfSortDir = perfSortDir==='asc'?'desc':'asc'; } else { perfSortKey=key; perfSortDir='desc'; }
+    document.querySelectorAll('#perfTable th').forEach(h=>h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(perfSortDir==='asc'?'sort-asc':'sort-desc');
+    renderPerfTable();
+  });
+});
+document.getElementById('perfAmcFilter').addEventListener('change',e=>{ perfFilterAmc=e.target.value; renderPerfTable(); });
+document.getElementById('perfCatFilter').addEventListener('change',e=>{ perfFilterCat=e.target.value; renderPerfTable(); });
+document.getElementById('perfShowTop5').addEventListener('click',()=>{ perfShowMode='top5'; toggleShowBtns('perfShowTop5'); renderPerfTable(); });
+document.getElementById('perfShowAll').addEventListener('click',()=>{ perfShowMode='all'; toggleShowBtns('perfShowAll'); renderPerfTable(); });
+document.getElementById('perfReset').addEventListener('click',()=>{
+  perfFilterAmc=''; perfFilterCat=''; perfShowMode='all';
+  document.getElementById('perfAmcFilter').value=''; document.getElementById('perfCatFilter').value='';
+  toggleShowBtns('perfShowAll'); renderPerfTable();
+});
+function toggleShowBtns(activeId){
+  ['perfShowTop5','perfShowAll'].forEach(id=>document.getElementById(id).classList.toggle('active', id===activeId));
+}
+
+// ================= ALLOCATION TAB =================
+function renderAllocation(){
+  const catData = [
+    {name:'ELSS', inv:1.90, cur:1.84, guard:'No specific cap'},
+    {name:'Focused Fund', inv:0.73, cur:1.89, guard:'No specific cap'},
+    {name:'International (Greater China ×2)', inv:9.74, cur:12.86, guard:'≤15% — compliant, but hidden single-country overlap ⚠'},
+    {name:'Mid Cap', inv:18.74, cur:18.96, guard:'No specific cap'},
+    {name:'Sectoral (Technology/IT)', inv:20.93, cur:16.73, guard:'≤10% — BREACH 2.09× ⚠'},
+    {name:'Index — Large Cap (Next 50)', inv:32.38, cur:32.31, guard:'No specific cap (but single-fund cap breached, see below)'},
+    {name:'Commodities (Gold + Silver)', inv:15.58, cur:15.40, guard:'No formal cap — flagged for size'}
+  ];
+  document.getElementById('categoryBreakdownBody').innerHTML = catData.map(c=>{
+    const breach = c.guard.includes('BREACH');
+    return `<tr><td>${c.name}</td><td class="right">${pct(c.inv)}</td><td class="right">${pct(c.cur)}</td>
+    <td>${breach? '<span class="flagbad">'+c.guard+'</span>' : '<span class="muted small">'+c.guard+'</span>'}</td></tr>`;
+  }).join('');
+
+  const amcData = [
+    {name:'Tata Mutual Fund', pct:39.69},
+    {name:'Kotak Mahindra Mutual Fund', pct:32.38},
+    {name:'Motilal Oswal Mutual Fund', pct:15.58},
+    {name:'Edelweiss Mutual Fund', pct:4.87},
+    {name:'Axis Mutual Fund', pct:4.87},
+    {name:'Quant Mutual Fund', pct:1.90},
+    {name:'Mahindra Manulife Mutual Fund', pct:0.73}
+  ];
+  document.getElementById('amcConcentrationBody').innerHTML = amcData.map(a=>`<tr>
+    <td>${a.name}</td><td class="right">${pct(a.pct)}</td>
+    <td style="width:160px"><div class="barwrap"><div class="bar" style="width:${a.pct}%;background:${a.pct>30?'var(--red)':a.pct>15?'var(--amber)':'var(--cyan)'}"></div></div></td>
+  </tr>`).join('');
+}
+
+// ================= ACTION TAB =================
+let actionFilterPriority='', actionFilterType='';
+function populateActionTypeFilter(){
+  const sel = document.getElementById('actionTypeFilter');
+  const types = [...new Set(ACTIONS.map(a=>a.action))];
+  types.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
+}
+function renderActions(){
+  let list = ACTIONS.filter(a=>{
+    if(actionFilterPriority && a.priority!==actionFilterPriority) return false;
+    if(actionFilterType && a.action!==actionFilterType) return false;
+    return true;
+  });
+  const order={High:0,Medium:1,Low:2,'—':3};
+  list = list.slice().sort((a,b)=>(order[a.priority]??3)-(order[b.priority]??3));
+  document.getElementById('actionCards').innerHTML = list.map(a=>`
+    <div class="section">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <h3 style="margin:0;font-size:15px;">${a.fund}</h3>
+        <div class="pill-row">
+          <span class="tag ${a.priority==='—'?'Low':a.priority}">${a.priority} priority</span>
+          <span class="badge cyan">${a.action}</span>
+          ${a.confidence!=='—'? '<span class="tag conf-'+a.confidence+'">Confidence: '+a.confidence+'</span>':''}
+        </div>
+      </div>
+      <p style="margin-top:10px"><b>Reason:</b> ${a.reason}</p>
+      <p><b>Suggested:</b> ${a.suggested}</p>
+      ${a.switchCost? '<p class="muted small">⚠ Switching/selling units may trigger a taxable capital gain — confirm your holding period before acting. (This is a flag, not a tax calculation.)</p>':''}
+    </div>
+  `).join('');
+}
+document.getElementById('actionPriorityFilter').addEventListener('change',e=>{ actionFilterPriority=e.target.value; renderActions(); });
+document.getElementById('actionTypeFilter').addEventListener('change',e=>{ actionFilterType=e.target.value; renderActions(); });
+document.getElementById('actionReset').addEventListener('click',()=>{
+  actionFilterPriority=''; actionFilterType='';
+  document.getElementById('actionPriorityFilter').value=''; document.getElementById('actionTypeFilter').value='';
+  renderActions();
+});
+
+// ================= SCORING TAB =================
+function renderSourceTiers(){
+  document.getElementById('sourceTierBody').innerHTML = FUNDS.map(f=>`<tr>
+    <td>${f.scheme}</td>
+    <td>T1 ${f.benchmark.includes('confirmed')? '✓':'(default/ambiguous ⚠)'}</td>
+    <td>${f.return5Y.includes('⚠')||f.return3Y.includes('⚠')? 'T2/T3 — variance flagged ⚠':'T2 ✓'}</td>
+    <td>${f.expTier} ${f.expRatioLabel.includes('⚠')?'(variance ⚠)':''}</td>
+    <td>${f.aumTier}</td>
+  </tr>`).join('');
+}
+
+// ================= NOMINEE TAB =================
+function renderNominee(){
+  const folioMap = {};
+  FUNDS.forEach(f=>{
+    f.folios.forEach(folio=>{
+      if(!folioMap[folio]) folioMap[folio] = {amc:f.amc, schemes:[]};
+      folioMap[folio].schemes.push(f.scheme);
+    });
+  });
+  let rows='';
+  Object.keys(folioMap).forEach(folio=>{
+    rows += `<tr><td>${folio}</td><td>${folioMap[folio].amc}</td><td>${[...new Set(folioMap[folio].schemes)].join('<br>')}</td>
+    <td><span class="badge red">Not present in statement ⚠</span></td></tr>`;
+  });
+  document.getElementById('nomineeBody').innerHTML = rows;
+}
+
+// ================= INIT =================
+populateFilters();
+populateActionTypeFilter();
+renderOverviewHoldings();
+renderPerfTable();
+renderTopWeak();
+renderTrendFlags();
+renderAllocation();
+renderActions();
+renderSourceTiers();
+renderNominee();
+</script>
+</body>
+</html>
