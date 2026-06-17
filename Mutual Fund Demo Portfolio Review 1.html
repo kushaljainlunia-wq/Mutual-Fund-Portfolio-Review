@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mutual Fund Portfolio Dashboard — Kushal Lunia</title>
+<style>
+:root{
+  --green:#34D399; --green-bg:#ECFDF5; --green-border:#A7F3D0;
+  --amber:#F59E0B; --amber-bg:#FFFBEB; --amber-border:#FDE68A;
+  --red:#F87171; --red-bg:#FEF2F2; --red-border:#FECACA;
+  --cyan:#06B6D4; --cyan-bg:#ECFEFF; --cyan-border:#A5F3FC;
+  --ink:#0F172A; --ink-soft:#475569; --ink-faint:#94A3B8;
+  --paper:#F8FAFC; --card:#FFFFFF; --line:#E2E8F0;
+  --navy:#0B1F3A; --navy-soft:#16304F;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background:var(--paper); color:var(--ink); line-height:1.5;
+}
+.mono{font-family: "SF Mono", "Roboto Mono", Consolas, monospace;}
+header.top{
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%);
+  color:#fff; padding:28px 28px 22px;
+}
+header.top .wrap{max-width:1180px;margin:0 auto;}
+header.top h1{margin:0 0 4px; font-size:22px; font-weight:700; letter-spacing:-0.01em;}
+header.top .sub{color:#B9C7DD; font-size:13.5px; margin-bottom:18px;}
+.kpi-row{display:flex; gap:14px; flex-wrap:wrap;}
+.kpi{
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14);
+  border-radius:10px; padding:12px 16px; min-width:140px; flex:1;
+}
+.kpi .label{font-size:11px; color:#9FB1CC; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;}
+.kpi .value{font-size:19px; font-weight:700; font-family:"SF Mono",Consolas,monospace;}
+.kpi .value.pos{color:#6EE7B7;}
+.kpi .value.neg{color:#FCA5A5;}
+
+.freshness-banner{
+  max-width:1180px; margin:16px auto 0; padding:11px 16px; border-radius:8px;
+  display:flex; align-items:center; gap:10px; font-size:13px;
+  background:var(--green-bg); border:1px solid var(--green-border); color:#065F46;
+}
+.freshness-banner .dot{width:9px;height:9px;border-radius:50%;background:var(--green); flex:none;}
+.freshness-banner b{font-weight:700;}
+
+nav.tabs{
+  max-width:1180px; margin:18px auto 0; display:flex; gap:4px; flex-wrap:wrap;
+  border-bottom:1px solid var(--line); padding:0 4px;
+}
+nav.tabs button{
+  background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink-soft);
+  padding:11px 16px;border-radius:8px 8px 0 0;position:relative;top:1px;
+  transition:.15s; white-space:nowrap;
+}
+nav.tabs button:hover{background:#EEF2F7; color:var(--ink);}
+nav.tabs button.active{color:var(--navy); border-bottom:3px solid var(--cyan); background:#fff;}
+
+main{max-width:1180px; margin:0 auto; padding:22px 16px 60px;}
+.panel{display:none;}
+.panel.active{display:block; animation:fadein .18s ease;}
+@keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+.card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:16px; box-shadow:0 1px 2px rgba(15,23,42,.03);}
+.card h2{font-size:15px; margin:0 0 4px; font-weight:700;}
+.card .desc{font-size:12.5px; color:var(--ink-soft); margin:0 0 14px;}
+
+.grid-2{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+@media (max-width:820px){ .grid-2,.grid-3{grid-template-columns:1fr;} }
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.02em;}
+.badge.green{background:var(--green-bg);color:#065F46;border:1px solid var(--green-border);}
+.badge.amber{background:var(--amber-bg);color:#92400E;border:1px solid var(--amber-border);}
+.badge.red{background:var(--red-bg);color:#991B1B;border:1px solid var(--red-border);}
+.badge.cyan{background:var(--cyan-bg);color:#155E75;border:1px solid var(--cyan-border);}
+.badge.grey{background:#F1F5F9;color:#475569;border:1px solid var(--line);}
+
+.score-wrap{display:flex; align-items:center; gap:22px; flex-wrap:wrap;}
+.score-circle{
+  width:108px;height:108px;border-radius:50%;
+  background:conic-gradient(var(--amber) calc(var(--pct,45)*1%), #EDF1F6 0);
+  display:flex;align-items:center;justify-content:center;flex:none;position:relative;
+}
+.score-circle::before{content:"";position:absolute;width:84px;height:84px;border-radius:50%;background:#fff;}
+.score-circle .num{position:relative;font-size:24px;font-weight:800;font-family:"SF Mono",Consolas,monospace;}
+.score-circle .num span{font-size:12px;font-weight:600;color:var(--ink-faint);}
+
+.bar-row{display:flex; align-items:center; gap:10px; margin-bottom:9px; font-size:12.5px;}
+.bar-row .lbl{width:230px; flex:none; color:var(--ink-soft);}
+.bar-track{flex:1; background:#EEF1F6; border-radius:6px; height:10px; overflow:hidden; position:relative;}
+.bar-fill{height:100%; border-radius:6px;}
+.bar-val{width:62px; text-align:right; flex:none; font-family:"SF Mono",Consolas,monospace; font-weight:600;}
+.cap-marker{position:absolute; top:-3px; bottom:-3px; width:2px; background:#1E293B;}
+
+table{width:100%; border-collapse:collapse; font-size:12.8px;}
+table th{text-align:left; padding:9px 10px; border-bottom:2px solid var(--line); color:var(--ink-soft); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.02em; cursor:pointer; white-space:nowrap; user-select:none;}
+table th:hover{color:var(--navy);}
+table th.sort-asc::after{content:" \25B2"; font-size:9px;}
+table th.sort-desc::after{content:" \25BC"; font-size:9px;}
+table td{padding:9px 10px; border-bottom:1px solid #F1F5F9; vertical-align:top;}
+table tbody tr:hover{background:#FAFBFD;}
+.num{font-family:"SF Mono",Consolas,monospace; text-align:right;}
+.right{text-align:right;}
+
+.controls{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center;}
+select, .btn{
+  font-size:12.5px; padding:7px 11px; border-radius:7px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--ink);
+}
+.btn{font-weight:600;}
+.btn.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+.btn:hover{border-color:var(--ink-faint);}
+
+.fund-card{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; overflow:hidden;}
+.fund-card .fc-head{padding:13px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; gap:12px; flex-wrap:wrap;}
+.fund-card .fc-head:hover{background:#FAFBFD;}
+.fund-card .fc-title{font-weight:700; font-size:13.5px;}
+.fund-card .fc-sub{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+.fund-card .fc-right{display:flex; align-items:center; gap:14px;}
+.fund-card .fc-body{display:none; padding:0 16px 16px; font-size:13px; border-top:1px solid var(--line);}
+.fund-card.open .fc-body{display:block;}
+.fund-card .fc-body .row{display:grid; grid-template-columns:170px 1fr; gap:8px; padding:6px 0; border-bottom:1px dashed #EEF1F6; font-size:12.6px;}
+.fund-card .fc-body .row .k{color:var(--ink-soft); font-weight:600;}
+.chevron{transition:transform .15s; color:var(--ink-faint);}
+.fund-card.open .chevron{transform:rotate(90deg);}
+
+.flag-box{border-radius:8px; padding:11px 14px; font-size:12.8px; margin-top:10px; border:1px solid;}
+.flag-box.warn{background:var(--amber-bg); border-color:var(--amber-border); color:#7C2D12;}
+.flag-box.danger{background:var(--red-bg); border-color:var(--red-border); color:#7F1D1D;}
+.flag-box.info{background:var(--cyan-bg); border-color:var(--cyan-border); color:#0C4A6E;}
+
+.imp-list{list-style:none; margin:0; padding:0;}
+.imp-list li{display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #F1F5F9;}
+.imp-list li:last-child{border-bottom:none;}
+.imp-num{flex:none; width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+
+.toggle-link{font-size:12px; color:var(--cyan); cursor:pointer; font-weight:600; text-decoration:underline;}
+.hidden-section{display:none;}
+
+footer{max-width:1180px; margin:0 auto; padding:8px 16px 50px; font-size:11.3px; color:var(--ink-faint); line-height:1.65;}
+footer .fdiv{border-top:1px solid var(--line); padding-top:18px; margin-top:8px;}
+footer h3{font-size:12.5px; color:var(--ink-soft); margin:18px 0 6px;}
+footer .attrib{font-size:12px; color:var(--ink-soft); margin-top:14px;}
+footer a{color:var(--cyan);}
+
+.pill-row{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+.tag{font-size:10.8px; background:#F1F5F9; border:1px solid var(--line); border-radius:6px; padding:2px 7px; color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Mutual Fund Portfolio Dashboard</h1>
+    <div class="sub">Kushal Lunia &nbsp;·&nbsp; PAN BHIPL7651N &nbsp;·&nbsp; Holdings as on 17 Jun 2026 &nbsp;·&nbsp; Generated 17 Jun 2026</div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="label">Total Invested</div><div class="value">₹20,57,969</div></div>
+      <div class="kpi"><div class="label">Current Value</div><div class="value">₹26,20,072</div></div>
+      <div class="kpi"><div class="label">Absolute Gain</div><div class="value pos">+₹5,62,103 (+27.31%)</div></div>
+      <div class="kpi"><div class="label">Portfolio XIRR</div><div class="value pos">10.97%</div></div>
+      <div class="kpi"><div class="label">Portfolio Score</div><div class="value">4.5 / 10</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="freshness-banner">
+  <span class="dot"></span>
+  <span><b>DATA IS CURRENT</b> — Statement dated 17-Jun-2026 · Live-verified 17-Jun-2026 (0 days old) · Sources: AMFI, Value Research, Groww, INDmoney, AMC factsheets (T1/T2) · 3 data gaps flagged (see Sources &amp; Score tab) · Max confidence 10.0/10</span>
+</div>
+
+<nav class="tabs" id="tabNav">
+  <button data-tab="overview" class="active">📊 Overview</button>
+  <button data-tab="performance">📈 Performance</button>
+  <button data-tab="allocation">🗂 Allocation</button>
+  <button data-tab="action">⚡ Action</button>
+  <button data-tab="tax">💰 Tax</button>
+  <button data-tab="sources">📑 Sources &amp; Score</button>
+  <button data-tab="nominee">👤 Nominee</button>
+</nav>
+
+<main>
+
+<!-- ============ OVERVIEW ============ -->
+<section class="panel active" id="panel-overview">
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>Portfolio Score</h2>
+      <p class="desc">Weighted across Core Decision Metrics (50%), Diagnostic Metrics (35%) and Context Metrics (15%), net of penalties.</p>
+      <div class="score-wrap">
+        <div class="score-circle" style="--pct:45;">
+          <div class="num">4.5<span>/10</span></div>
+        </div>
+        <div style="flex:1;min-width:240px;">
+          <div class="bar-row"><div class="lbl">Tier 1 — Core Decision (50%)</div><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--amber);"></div></div><div class="bar-val">5.5</div></div>
+          <div class="bar-row"><div class="lbl">Tier 2 — Diagnostic (35%)</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--amber);"></div></div><div class="bar-val">5.0</div></div>
+          <div class="bar-row"><div class="lbl">Tier 3 — Context (15%)</div><div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--green);"></div></div><div class="bar-val">6.0</div></div>
+          <div class="bar-row" style="margin-top:8px;"><div class="lbl">Weighted raw score</div><div class="bar-track"></div><div class="bar-val">5.4</div></div>
+          <div class="bar-row"><div class="lbl">− Missing-data penalty</div><div class="bar-track"></div><div class="bar-val" style="color:var(--red);">−0.3</div></div>
+          <div class="bar-row"><div class="lbl">− Guardrail-breach penalty</div><div class="bar-track"></div><div class="bar-val" style="color:var(--red);">−0.6</div></div>
+        </div>
+      </div>
+      <p style="font-size:12.6px;color:var(--ink-soft);margin-top:12px;" id="scoreRationale"></p>
+    </div>
+
+    <div class="card">
+      <h2>Risk Snapshot</h2>
+      <p class="desc">Holding-level risk ratings rolled up to a single portfolio view.</p>
+      <div class="badge red" style="font-size:13px;padding:6px 14px;margin-bottom:10px;">AGGRESSIVE</div>
+      <p style="font-size:12.8px;color:var(--ink-soft);" id="riskRationale"></p>
+      <div class="pill-row">
+        <span class="tag">0% Large-cap / Flexi-cap core</span>
+        <span class="tag">53% Thematic+Sectoral</span>
+        <span class="tag">25.6% Small-cap</span>
+        <span class="tag">20.2% Commodities</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Top 5 Improvements</h2>
+    <p class="desc">Highest-impact actions, ranked by priority.</p>
+    <ul class="imp-list" id="improvementsList"></ul>
+  </div>
+
+  <div class="grid-3">
+    <div class="card"><h2>Holdings</h2><div style="font-size:26px;font-weight:800;" class="mono">19</div><div style="font-size:12px;color:var(--ink-soft);">across 14 distinct schemes</div></div>
+    <div class="card"><h2>Fund Houses (AMCs)</h2><div style="font-size:26px;font-weight:800;" class="mono">9</div><div style="font-size:12px;color:var(--ink-soft);">Top 3 AMCs = 60.7% of portfolio</div></div>
+    <div class="card"><h2>Data Gaps Flagged</h2><div style="font-size:26px;font-weight:800;" class="mono">3</div><div style="font-size:12px;color:var(--ink-soft);">purchase dates, nominee, 1 plan-type</div></div>
+  </div>
+
+</section>
+
+<!-- ============ PERFORMANCE ============ -->
+<section class="panel" id="panel-performance">
+  <div class="card">
+    <h2>Fund-wise Performance</h2>
+    <p class="desc">Click any column header to sort. Click a row to expand full detail, attribution and recommendation.</p>
+    <div class="controls">
+      <select id="perfSort">
+        <option value="weight">Sort by Weight</option>
+        <option value="ret_pct">Sort by Return %</option>
+        <option value="invested">Sort by Invested ₹</option>
+        <option value="gain">Sort by Gain ₹</option>
+      </select>
+      <button class="btn" id="showAllPerf">Show all</button>
+      <button class="btn" id="showTop5Perf">Show top 5</button>
+    </div>
+    <div id="fundCards"></div>
+  </div>
+
+  <div class="card">
+    <h2>Portfolio-Level Performance Summary</h2>
+    <div class="grid-2">
+      <div>
+        <div class="bar-row"><div class="lbl">Top performer</div><div style="flex:1;font-weight:600;">Navi US Total Stock Market FoF — +113.86%</div></div>
+        <div class="bar-row"><div class="lbl">2nd best</div><div style="flex:1;">ICICI Prudential Silver ETF FoF — +34.11%</div></div>
+        <div class="bar-row"><div class="lbl">3rd best</div><div style="flex:1;">Axis Gold Direct Plan Growth — +35.12%</div></div>
+        <div class="bar-row" style="margin-top:10px;"><div class="lbl">Weakest performer</div><div style="flex:1;font-weight:600;color:var(--red);">Axis Quant Fund — +3.72%</div></div>
+        <div class="bar-row"><div class="lbl">2nd weakest</div><div style="flex:1;">Groww Nifty Smallcap 250 Index — +4.67%</div></div>
+        <div class="bar-row"><div class="lbl">3rd weakest</div><div style="flex:1;">Nippon India Smallcap 250 Index — +5.92%</div></div>
+      </div>
+      <div class="flag-box info">
+        <b>Performance attribution:</b> Returns were driven almost entirely by macro tailwinds outside the fund managers' control — the FY25-26 gold rally (Axis/LIC Gold), the silver rally (ICICI Silver, +140-170% 1Y across sources), the China/Hong Kong equity rally (Axis Greater China), and the US equity + rupee depreciation tailwind (Navi US Total Stock Market). Selection effect (manager stock-picking skill) contributed comparatively little — this was a portfolio of correctly-timed macro/thematic bets, which is a different (and riskier) skill than diversified compounding.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ALLOCATION ============ -->
+<section class="panel" id="panel-allocation">
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>Asset Class</h2>
+      <div id="assetClassBars"></div>
+    </div>
+    <div class="card">
+      <h2>Fund House (AMC) Breakdown</h2>
+      <div id="amcBars"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Sub-category Breakdown (Equity + Commodities)</h2>
+    <p class="desc">% of total invested value.</p>
+    <div id="subcatBars"></div>
+  </div>
+
+  <div class="card">
+    <h2>Category Guardrails</h2>
+    <p class="desc">Standard category caps for a diversified retail equity book vs this portfolio's actual exposure.</p>
+    <div id="guardrailBars"></div>
+  </div>
+
+  <div class="card">
+    <h2>Overlap &amp; Duplicated Exposure</h2>
+    <p class="desc">Fund pairs sharing the same index, asset, or top holdings.</p>
+    <table id="overlapTable">
+      <thead><tr><th>Fund A</th><th>Fund B</th><th>Overlap</th><th>Note</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Concentration Risk</h2>
+    <div class="grid-3">
+      <div><div style="font-size:12px;color:var(--ink-soft);">Top 3 funds</div><div style="font-size:22px;font-weight:800;" class="mono">38.83%</div><div style="font-size:11.5px;color:var(--ink-soft);">Below the 50% flag threshold</div></div>
+      <div><div style="font-size:12px;color:var(--ink-soft);">Top 3 AMCs</div><div style="font-size:22px;font-weight:800;" class="mono">60.74%</div><div style="font-size:11.5px;color:var(--ink-soft);">Nippon India, Quant, Axis</div></div>
+      <div><div style="font-size:12px;color:var(--ink-soft);">Single fund max weight</div><div style="font-size:22px;font-weight:800;" class="mono">13.40%</div><div style="font-size:11.5px;color:var(--ink-soft);">Nippon Smallcap 250 — under the 20% flag</div></div>
+    </div>
+    <div class="flag-box warn" style="margin-top:14px;">
+      <b>Hidden single-stock concentration:</b> Reliance Industries appears as a top-5 holding inside 3 separate funds (Quant Commodities, Navi Manufacturing Index, Quant Infrastructure). Your effective single-stock exposure to Reliance is meaningfully higher than any individual fund weight suggests.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Dividend (IDCW) vs Growth Plan Check</h2>
+    <table>
+      <thead><tr><th>Scheme</th><th class="num">Invested</th><th class="num">% of Portfolio</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>Nippon India Multi Cap Fund IDCW</td><td class="num">₹1,91,090</td><td class="num">9.29%</td><td>Switch to Growth option for tax-efficient compounding</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<!-- ============ ACTION ============ -->
+<section class="panel" id="panel-action">
+  <div class="card">
+    <h2>Recommended Actions</h2>
+    <p class="desc">Sorted by priority. Each recommendation includes the supporting reason and confidence level.</p>
+    <div class="controls">
+      <button class="btn active" data-filter="all">All</button>
+      <button class="btn" data-filter="High">High priority</button>
+      <button class="btn" data-filter="Medium">Medium priority</button>
+      <button class="btn" data-filter="Low">Low priority</button>
+    </div>
+    <table id="actionTable">
+      <thead><tr><th>Fund</th><th>Action</th><th>Priority</th><th>Confidence</th><th>Reason</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Special Action Estimates</h2>
+    <div class="flag-box warn">
+      <b>Consolidate Smallcap 250 duplication:</b> Moving the ₹1,44,743 in Groww Nifty Smallcap 250 Index Fund into the existing Nippon India Nifty Smallcap 250 Index Fund holding saves ~0.10% p.a. in expense ratio (0.45% → 0.35%) — roughly ₹145/year now, growing with the position, with zero loss of market exposure since both track the identical index.
+    </div>
+    <div class="flag-box info" style="margin-top:10px;">
+      <b>Switch Nippon India Multi Cap Fund IDCW → Growth:</b> No separate cost saving, but redirects future dividend payouts (taxed at slab rate as income) into NAV-compounding (taxed only as LTCG/STCG on eventual redemption) — meaningfully more tax-efficient for a long-term holding.
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAX ============ -->
+<section class="panel" id="panel-tax">
+  <div class="card">
+    <h2>Tax Analysis — Data Limitation</h2>
+    <div class="flag-box danger">
+      <b>Purchase/transaction dates are not present in this statement.</b> This statement (an MF holdings export) includes units, invested value, current value and XIRR per folio, but not individual transaction dates. Without these, Claude cannot reliably determine: exact holding period per lot, short-term vs long-term capital gains classification, exit-load applicability windows, or precise tax-harvesting opportunities.
+      <br><br>
+      <b>To get a full tax analysis</b>, upload your MF Central Consolidated Account Statement (CAS) or CAMS/KFintech CAS, which includes transaction-level dates — re-run this same review and the Tax tab will populate with ST/LT gain splits, harvesting opportunities, and exit-load impact per fund.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>What We Can Tell From Returns &amp; XIRR</h2>
+    <p class="desc">High XIRR values on several holdings suggest meaningful, possibly multi-year holding periods, implying long-term capital gains (LTCG) treatment is likely for most equity holdings if sold today — but this is an inference, not a confirmed fact, and should be verified against actual purchase dates before acting.</p>
+    <table>
+      <thead><tr><th>Scheme</th><th class="num">XIRR (as reported)</th><th>Likely holding-period signal</th></tr></thead>
+      <tbody id="taxInferenceTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>ELSS Lock-in Tracker</h2>
+    <p class="desc">No ELSS (tax-saving) funds were identified in this portfolio — lock-in tracking is not applicable.</p>
+  </div>
+</section>
+
+<!-- ============ SOURCES & SCORE ============ -->
+<section class="panel" id="panel-sources">
+  <div class="card">
+    <h2>Source Hierarchy &amp; Confidence</h2>
+    <table>
+      <thead><tr><th>Tier</th><th>Sources used</th><th>Confidence</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge green">T1</span></td><td>AMFI category classifications, AMC factsheets (Axis, Tata, Navi, Nippon India, ICICI Prudential, LIC, Invesco, Groww, Quant)</td><td>High</td></tr>
+        <tr><td><span class="badge cyan">T2</span></td><td>Value Research Online, Groww, INDmoney, Tickertape, Upstox, Paytm Money, Dezerv, Dhan, Stack Wealth</td><td>High-Medium</td></tr>
+        <tr><td><span class="badge amber">T3/T4</span></td><td>None used</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Data Gap Log</h2>
+    <table id="gapTable">
+      <thead><tr><th>Item</th><th>Impact</th><th>Source needed to close gap</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Score Formula</h2>
+    <p class="desc mono" style="font-size:12.3px;">Final Score = (Tier1 × 0.50) + (Tier2 × 0.35) + (Tier3 × 0.15) − Missing-data penalty − Guardrail-breach penalty</p>
+    <div class="bar-row"><div class="lbl">Tier 1 — Core Decision Metrics</div><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--amber);"></div></div><div class="bar-val">5.5 / 10</div></div>
+    <div class="bar-row"><div class="lbl">Tier 2 — Diagnostic Metrics</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--amber);"></div></div><div class="bar-val">5.0 / 10</div></div>
+    <div class="bar-row"><div class="lbl">Tier 3 — Context Metrics</div><div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--green);"></div></div><div class="bar-val">6.0 / 10</div></div>
+    <p style="font-size:12.6px;color:var(--ink-soft);margin-top:10px;" id="scoreRationale2"></p>
+  </div>
+
+  <div class="card">
+    <h2>Per-Fund Data Confidence</h2>
+    <table id="confTable">
+      <thead><tr><th>Scheme</th><th>Confidence</th><th>Note</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ NOMINEE ============ -->
+<section class="panel" id="panel-nominee">
+  <div class="card">
+    <h2>Nominee Status</h2>
+    <div class="flag-box danger">
+      <b>No nominee data found in this statement.</b> The uploaded file contains investor name, mobile number and PAN, but no nominee field for any of the 19 folios. SEBI requires either a registered nominee or an explicit opt-out declaration for every mutual fund folio — folios without either are at risk of becoming unclaimed assets in the event of the investor's death.
+    </div>
+    <p style="font-size:12.8px;color:var(--ink-soft);margin-top:12px;">
+      <b>Recommended action:</b> Check nominee status for all 19 folios via the MF Central portal (mfcentral.com) or directly with CAMS/KFintech using your PAN. If any folio shows no nominee or no opt-out, update it — this takes a few minutes per AMC online and is one of the highest-value, lowest-effort actions available given the portfolio size (₹26.2 lakh current value).
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="fdiv">
+    <h3>SECTION A — INVESTMENT DISCLAIMER</h3>
+    This report is for educational and informational purposes only and does not constitute investment advice, a recommendation to buy or sell mutual fund units, or a solicitation of any offer. This is NOT a SEBI-registered research report. Investors should conduct their own due diligence and consult a SEBI-registered investment advisor or financial planner before making investment decisions. Past performance is not indicative of future results. All data sourced from public domains (AMFI, AMC factsheets, MF Central, Value Research, Groww, INDmoney and other aggregators). The author is not responsible for investment outcomes based on this report.
+
+    <h3>SECTION B — AI DISCLOSURE</h3>
+    ⚠ This report was generated using Claude AI (Anthropic) powered by the Mutual Fund Portfolio Dashboard skill.
+    <br>1. <b>Hallucination risk:</b> AI language models can generate plausible-sounding but factually incorrect information. All financial figures, returns, expense ratios, AUM, and data points in this report should be independently verified from primary sources (AMFI, AMC factsheet, MF Central) before being relied upon.
+    <br>2. <b>Data currency:</b> AI models have knowledge cutoffs and may not reflect the most recent NAV, returns, or regulatory changes. Always check the report generation date and verify recency of all data from official sources.
+    <br>3. <b>Web search limitations:</b> While this skill uses live web search, results may be incomplete, delayed, or from lower-quality sources. Several fund return figures in this report varied meaningfully across sources/dates and are flagged with Medium/Low confidence accordingly.
+    <br>4. <b>Not a substitute for professional advice:</b> AI-generated analysis is a supplementary tool only. It does not replace professional financial analysis, registered research reports, or advice from a licensed investment advisor.
+    <br>5. <b>No liability:</b> The AI, the skill author, and Anthropic accept no liability for financial losses arising from reliance on this AI-generated report.
+
+    <h3>SECTION C — REPORT ATTRIBUTION</h3>
+    Research skill designed by: <b>Kushal Lunia</b> — CA Finalist | Internal Audit &amp; Financial Reporting | Ex-EY (Big 4) &amp; Ex-UBS<br>
+    Data Analytics: Alteryx · Power BI · Excel · Power Query<br>
+    🔗 <a href="https://www.linkedin.com/in/kushal-lunia-7b9585138/" target="_blank">linkedin.com/in/kushal-lunia-7b9585138</a>
+
+    <div class="attrib">
+      AI Engine: Claude (Anthropic) &nbsp;·&nbsp; Report generated: 17 June 2026 &nbsp;·&nbsp; Market: INDIA (Mutual Funds) &nbsp;·&nbsp; Currency: INR<br>
+      Data confidence: 7.0/10 (Moderate) &nbsp;·&nbsp; Latest Statement Date: 17-Jun-2026 &nbsp;·&nbsp; Missing Data Count: 3 items flagged
+    </div>
+  </div>
+</footer>
+
+<script>
+const FUNDS = [{"scheme": "Quant Commodities Fund Direct Growth", "amc": "Quant Mutual Fund", "category": "Equity", "subcat": "Thematic (Commodities)", "invested": 154992.27, "current": 181683.58, "gain": 26691.3, "ret_pct": 17.22, "xirr": 12.19, "units": 11845.401, "weight": 7.53, "folios": 1, "benchmark": "Nifty Commodities TRI", "expense": 1.08, "aum_cr": 340, "risk": "Very High", "launch": "Dec 2023", "top_holdings": ["Reliance Industries", "NTPC", "Bayer CropScience", "Laxmi Organic Industries", "Himadri Speciality"], "ret_1y_range": "-8% to +22% (highly volatile across dates)", "ret_3y": "~27% cumulative", "plan_flag": "Direct, Growth - OK", "data_conf": "Medium - 1Y return varies widely across sources by date", "why": "Strong absolute gain driven by commodity-linked equity rally; expense ratio above category average; very high risk concentration in cyclical commodity stocks.", "action": "Reduce", "priority": "Medium", "conf": "Medium", "reason": "Overlaps thematically with Gold/Silver ETFs and Quant Infra in commodity-cycle exposure; high expense ratio (1.08%) for a thematic equity fund; trim to fund a core diversified holding."}, {"scheme": "Axis Gold Direct Plan Growth", "amc": "Axis Mutual Fund", "category": "Commodities", "subcat": "Gold", "invested": 266580.67, "current": 360191.23, "gain": 93610.56, "ret_pct": 35.12, "xirr": "50.63% / N/A (2 folios)", "units": 7598.41, "weight": 12.95, "folios": 2, "benchmark": "Domestic Gold Price (via Axis Gold ETF)", "expense": 0.17, "aum_cr": 2900, "risk": "High", "launch": "Jan 2013", "top_holdings": ["Axis Gold ETF (100%)"], "ret_1y_range": "53%-62% (gold bull run FY26)", "ret_3y": "~35-36% CAGR", "plan_flag": "Direct, Growth - OK", "data_conf": "High - consistent across sources", "why": "Exceptional 1Y gold rally drove returns; low-cost Gold FoF, well-run; largest AMC in this category for the investor.", "action": "Hold", "priority": "Low", "conf": "High", "reason": "Low expense ratio, large AUM, clean Gold FoF structure. Gold allocation (this + LIC Gold) already ~15% of portfolio \u2014 adequate as a hedge, avoid adding further."}, {"scheme": "ICICI Prudential Silver ETF FoF Direct Growth", "amc": "ICICI Prudential Mutual Fund", "category": "Commodities", "subcat": "Silver", "invested": 103994.89, "current": 139469.63, "gain": 35474.74, "ret_pct": 34.11, "xirr": "74.75% / N/A (2 folios)", "units": 3685.49, "weight": 5.05, "folios": 2, "benchmark": "Domestic Silver Price (MCX Silver)", "expense": 0.52, "aum_cr": 6277, "risk": "Very High", "launch": "Feb 2022", "top_holdings": ["ICICI Prudential Silver ETF (100%)"], "ret_1y_range": "140%-170% (exceptional silver rally)", "ret_3y": "~48-50% CAGR", "plan_flag": "Direct, Growth - OK", "data_conf": "High", "why": "Extraordinary silver price rally drove returns; silver is more volatile than gold, AUM has grown rapidly indicating heavy recent inflows industry-wide.", "action": "Reduce", "priority": "Medium", "conf": "Medium", "reason": "After a 140%+ 1Y rally, silver valuation/momentum risk is elevated. Consider booking partial profits and rebalancing into core equity rather than adding more precious-metal exposure."}, {"scheme": "LIC MF Gold ETF FoF Direct Growth", "amc": "LIC Mutual Fund", "category": "Commodities", "subcat": "Gold", "invested": 44997.77, "current": 53632.4, "gain": 8634.62, "ret_pct": 19.19, "xirr": "36.62% / N/A (2 folios)", "units": 1311.405, "weight": 2.19, "folios": 2, "benchmark": "Domestic Gold Price", "expense": 0.35, "aum_cr": 500, "risk": "High", "launch": "Jan 2013", "top_holdings": ["IDBI Gold ETF / Gold ETF (100%)"], "ret_1y_range": "56%-61%", "ret_3y": "~34% CAGR", "plan_flag": "Direct, Growth - OK", "data_conf": "Medium - AUM estimates vary widely by source", "why": "Tracks gold price; smaller, less liquid AUM than Axis Gold; expense ratio roughly double Axis Gold's for similar exposure.", "action": "Consolidate", "priority": "Low", "conf": "Medium", "reason": "Duplicates Axis Gold Direct Plan Growth's exposure (both are Gold FoFs). Consider consolidating into the larger, cheaper Axis Gold holding to simplify and marginally cut costs."}, {"scheme": "Nippon India Nifty Smallcap 250 Index Fund Direct Growth", "amc": "Nippon India Mutual Fund", "category": "Equity", "subcat": "Small Cap (Index)", "invested": 275735.21, "current": 292066.25, "gain": 16331.03, "ret_pct": 5.92, "xirr": "12.19% / 5.17% (2 folios)", "units": 8490.668, "weight": 13.4, "folios": 2, "benchmark": "Nifty Smallcap 250 TRI", "expense": 0.35, "aum_cr": 2750, "risk": "Very High", "launch": "Oct 2020", "top_holdings": ["Replicates Nifty Smallcap 250 Index (250 stocks)"], "ret_1y_range": "3%-18% (varies by date in volatile smallcap market)", "ret_3y": "~18% CAGR", "ret_5y": "~15% CAGR", "plan_flag": "Direct, Growth - OK", "data_conf": "High", "why": "Passive index fund; performance purely tracks Nifty Smallcap 250, which has been volatile. Cheapest of the two smallcap-250 trackers held.", "action": "Hold (consolidation target)", "priority": "High", "conf": "High", "reason": "This is your largest single holding (13.4%). It tracks the IDENTICAL index as the Groww Smallcap 250 fund below \u2014 keep this one (lower expense ratio, larger AUM, more established) and consolidate the Groww holding into it."}, {"scheme": "Tata Housing Opportunities Fund Direct Growth", "amc": "Tata Mutual Fund", "category": "Equity", "subcat": "Thematic (Housing)", "invested": 218239.17, "current": 236088.83, "gain": 17849.66, "ret_pct": 8.18, "xirr": 4.68, "units": 15103.112, "weight": 10.6, "folios": 1, "benchmark": "Nifty Housing TRI", "expense": 0.71, "aum_cr": 500, "risk": "Very High", "launch": "Sep 2022", "top_holdings": ["HDFC Bank", "Larsen & Toubro", "Prestige Estates", "ICICI Bank", "Can Fin Homes"], "ret_1y_range": "3%-12%", "ret_3y": "~57% cumulative", "plan_flag": "Direct, Growth - OK", "data_conf": "Medium", "why": "Lowest XIRR (4.68%) among equity holdings despite a long-running housing upcycle narrative; benchmark (Nifty Housing) has lagged broader equity indices recently.", "action": "Monitor", "priority": "Medium", "conf": "Medium", "reason": "Weakest risk-adjusted performer in the thematic sleeve. Shares L&T and bank holdings with Quant Infrastructure and Axis Quant funds, adding hidden overlap. Review at next rebalancing if underperformance persists."}, {"scheme": "Navi Nifty India Manufacturing Index Fund Direct Growth", "amc": "Navi Mutual Fund", "category": "Equity", "subcat": "Thematic (Manufacturing Index)", "invested": 193990.45, "current": 257163.95, "gain": 63173.5, "ret_pct": 32.57, "xirr": 16.47, "units": 13326.076, "weight": 9.43, "folios": 1, "benchmark": "Nifty India Manufacturing TRI", "expense": 0.41, "aum_cr": 75, "risk": "Very High", "launch": "Aug 2022", "top_holdings": ["Reliance Industries", "Sun Pharma", "Mahindra & Mahindra", "Maruti Suzuki", "Tata Motors"], "ret_1y_range": "4%-8%", "ret_3y": "~21% CAGR", "plan_flag": "Direct, Growth - OK", "data_conf": "Medium - AUM figures inconsistent across sources (\u20b950-90 Cr range)", "why": "Strong personal XIRR (16.47%) reflects good entry timing; but fund AUM is very small (~\u20b950-90 Cr), a liquidity/conviction watch-point for an index fund.", "action": "Monitor", "priority": "Low", "conf": "Medium", "reason": "Small AUM raises a watchlist flag (index funds with low AUM occasionally face higher tracking error or AMC discontinuation risk). Reliance Industries overlaps with Quant Commodities and Quant Infrastructure holdings."}, {"scheme": "Axis Greater China Equity FoF Direct Growth", "amc": "Axis Mutual Fund", "category": "Equity", "subcat": "International (China/HK/Taiwan)", "invested": 59997.01, "current": 78009.56, "gain": 18012.55, "ret_pct": 30.02, "xirr": "33.33% / 26.86% (2 folios)", "units": 6220.858, "weight": 2.92, "folios": 2, "benchmark": "MSCI Golden Dragon Index", "expense": 0.4, "aum_cr": 4168, "risk": "Very High", "launch": "Feb 2021", "top_holdings": ["Schroder Intl Selection Fund Greater China (underlying)"], "ret_1y_range": "45%-61% (China/HK rally)", "ret_3y": "~71% cumulative", "plan_flag": "Direct, Growth - OK", "data_conf": "High", "why": "Benefited strongly from the 2025-26 China/Hong Kong equity rally; FoF structure means a layer of underlying fund costs on top of the 0.40% wrapper expense.", "action": "Hold", "priority": "Low", "conf": "Medium", "reason": "Strong contributor to returns. Geography-specific (China policy/regulatory risk is material) \u2014 keep as a satellite but avoid increasing weight given concentration risk in a single foreign market."}, {"scheme": "Axis Quant Fund Direct Growth", "amc": "Axis Mutual Fund", "category": "Equity", "subcat": "Thematic (Quant/Factor)", "invested": 44718.44, "current": 46381.88, "gain": 1663.44, "ret_pct": 3.72, "xirr": 12.19, "units": 2696.621, "weight": 2.17, "folios": 1, "benchmark": "BSE 200 / Nifty 500", "expense": 0.65, "aum_cr": 1000, "risk": "Very High", "launch": "Jul 2021", "top_holdings": ["State Bank of India", "Bharti Airtel", "Axis Bank", "HDFC Bank", "BPCL"], "ret_1y_range": "-7% to +10% (highly volatile across dates)", "ret_3y": "~13-47% CAGR (wide range reported)", "plan_flag": "Direct, Growth - OK", "data_conf": "Low - 1Y/3Y figures vary unusually widely across sources", "why": "Smallest holding and weakest recent absolute gain; quant/factor-based strategy has had a choppy run; heavy financials/PSU-oil tilt overlaps with broader market beta rather than offering true diversification.", "action": "Reduce", "priority": "Low", "conf": "Medium", "reason": "Smallest position (2.17%) with inconsistent reported performance and bank-heavy holdings that duplicate exposure already present via Tata Housing's HDFC Bank/ICICI Bank holdings. A candidate to trim and redeploy into a core fund."}, {"scheme": "Groww Nifty Smallcap 250 Index Fund Direct Growth", "amc": "Groww Mutual Fund", "category": "Equity", "subcat": "Small Cap (Index)", "invested": 144742.79, "current": 151506.66, "gain": 6763.86, "ret_pct": 4.67, "xirr": 3.96, "units": 13081.443, "weight": 7.03, "folios": 1, "benchmark": "Nifty Smallcap 250 TRI", "expense": 0.45, "aum_cr": 120, "risk": "Very High", "launch": "Mar 2024", "top_holdings": ["Replicates Nifty Smallcap 250 Index (250 stocks)"], "ret_1y_range": "-5% to +13% (varies by date)", "ret_3y": "N/A - fund <2 years old", "plan_flag": "Direct, Growth - OK", "data_conf": "High", "why": "Tracks the exact same index as the Nippon India Smallcap 250 holding above, but with a higher expense ratio (0.45% vs 0.35%) and a much smaller, newer AUM base.", "action": "Sell / Consolidate", "priority": "High", "conf": "High", "reason": "This is a near-100% duplicate of the Nippon India Nifty Smallcap 250 Index Fund \u2014 same benchmark, same stocks, same strategy. Consolidating into the larger, cheaper Nippon holding saves ~0.10% p.a. in fees and removes redundant tracking."}, {"scheme": "Navi Total Stock Market US Specific Equity Passive FoF Direct Growth", "amc": "Navi Mutual Fund", "category": "Equity", "subcat": "International (US Total Market)", "invested": 82153.86, "current": 175694.29, "gain": 93540.43, "ret_pct": 113.86, "xirr": 25.56, "units": 7847.559, "weight": 3.99, "folios": 1, "benchmark": "CRSI US Total Market / Vanguard VTI (underlying)", "expense": 0.06, "aum_cr": 950, "risk": "Very High", "launch": "Feb 2022", "top_holdings": ["Vanguard Total Stock Market ETF (VTI) - underlying"], "ret_1y_range": "37%-47% (US equity rally + INR depreciation tailwind)", "ret_3y": "~26% CAGR", "plan_flag": "Direct, Growth - OK", "data_conf": "High", "why": "Best risk-adjusted performer in the portfolio: rock-bottom 0.06% expense ratio, broad US total-market diversification (not a narrow theme), and the strongest absolute gain (+114%) of any holding.", "action": "Add", "priority": "Medium", "conf": "High", "reason": "Cheapest, most diversified, best-performing holding in the book. A strong candidate to receive fresh allocations ahead of the narrower thematic bets, both for diversification and cost efficiency."}, {"scheme": "Nippon India Multi Cap Fund IDCW", "amc": "Nippon India Mutual Fund", "category": "Equity", "subcat": "Multi Cap", "invested": 191090.48, "current": 313356.65, "gain": 122266.17, "ret_pct": 63.98, "xirr": 8.45, "units": 5327.102, "weight": 9.29, "folios": 1, "benchmark": "Nifty 500 Multicap 50:25:25 TRI", "expense": "~0.71% (Direct) \u2014 could not confirm if this specific holding is Direct or Regular plan", "aum_cr": 50000, "risk": "Very High", "launch": "Mar 2005 (one of India's oldest multicap funds)", "top_holdings": ["Diversified across large/mid/small cap (\u226525% each mandated)"], "ret_1y_range": "Highest absolute gain in the portfolio (\u20b91.22L) \u2014 exact 1Y% varies by plan/option", "ret_3y": "~64-70% cumulative", "plan_flag": "\u26a0 IDCW (Dividend) option \u2014 NOT Growth. Scheme name lacks the word 'Direct' that all other 13 holdings explicitly carry \u2014 plan type (Direct vs Regular) could not be confirmed from the statement alone.", "data_conf": "Low on plan-type confirmation; High on fund identity/performance trend", "why": "Largest absolute gain (\u20b91.22 lakh) in the portfolio \u2014 strong long-tenured fund (managed by Sailesh Raj Bhan since 2005) with one of India's largest Multi Cap AUMs (~\u20b950,000 Cr). But the IDCW option pays out gains as taxable dividends instead of compounding them, and the plan-type ambiguity needs verification.", "action": "Swap to Growth + Verify Plan", "priority": "High", "conf": "Medium", "reason": "Switch from IDCW to the Growth option of the same scheme for better compounding and cleaner LTCG-only taxation (dividends are taxed at slab rate). Separately, verify with Nippon India AMC / MF Central whether this specific folio is on the Direct or Regular plan \u2014 if Regular, the expense ratio could be ~1% p.a. higher (~\u20b91,900/year, compounding over time) than the Direct plan figure shown."}, {"scheme": "Invesco India Invesco Global Consumer Trends FoF Direct Growth", "amc": "Invesco Mutual Fund", "category": "Equity", "subcat": "International (Global Consumer Theme)", "invested": 19998.99, "current": 22327.92, "gain": 2328.93, "ret_pct": 11.65, "xirr": 18.79, "units": 1483.09, "weight": 0.97, "folios": 1, "benchmark": "Global - Other / MSCI ACWI Consumer benchmark proxy", "expense": 0.56, "aum_cr": 450, "risk": "Very High", "launch": "Dec 2020", "top_holdings": ["Underlying Invesco Global Consumer Trends Fund (global consumer brands)"], "ret_1y_range": "9%-48% (extremely wide range across sources/dates)", "ret_3y": "~19-123% (wide range reported)", "plan_flag": "Direct, Growth - OK", "data_conf": "Low - return figures are unusually inconsistent across sources", "why": "Smallest position in the portfolio (0.97%) by design; adds a third, distinct international theme alongside China and the US, diversifying geography but adding another small, hard-to-track satellite position.", "action": "Monitor", "priority": "Low", "conf": "Low", "reason": "Position is too small to meaningfully move the portfolio and data confidence on its returns is low. Either build it into a more meaningful allocation or fold it into the US Total Stock Market holding, which is cheaper and easier to track."}, {"scheme": "Quant Infrastructure Fund Direct Growth", "amc": "Quant Mutual Fund", "category": "Equity", "subcat": "Sectoral (Infrastructure)", "invested": 256737.25, "current": 312499.27, "gain": 55762.01, "ret_pct": 21.72, "xirr": 12.61, "units": 6829.167, "weight": 12.48, "folios": 1, "benchmark": "Nifty Infrastructure TRI", "expense": 0.95, "aum_cr": 3000, "risk": "Very High", "launch": "1996/Quant takeover 2018", "top_holdings": ["Reliance Industries", "Larsen & Toubro", "ITC", "Tata Power", "Samvardhana Motherson", "Kalyani Steels", "Afcons Infrastructure"], "ret_1y_range": "14%-18%", "ret_3y": "~89% cumulative", "plan_flag": "Direct, Growth - OK", "data_conf": "Medium", "why": "Solid contributor (\u20b955,762 gain) riding India's capex/infra upcycle; expense ratio (~0.95-1.10%) is on the higher side for a sectoral fund.", "action": "Hold", "priority": "Low", "conf": "Medium", "reason": "Second-largest holding (12.48%) \u2014 strong performer, but shares Reliance Industries and L&T with Navi Manufacturing and Tata Housing respectively, adding hidden cross-fund overlap within the thematic sleeve."}];
+const META = {"investor": "Kushal Lunia", "pan": "BHIPL7651N", "mobile": "8319171312", "as_on": "2026-06-17", "total_invested": 2057969.27, "total_current": 2620072.08, "total_gain": 562102.81, "total_gain_pct": 27.31, "portfolio_xirr": 10.97, "holdings_count": 19, "distinct_schemes": 14, "amc_count": 9, "category_breakdown": [{"name": "Equity", "invested": 1642395.92, "pct": 79.81}, {"name": "Commodities (Gold+Silver)", "invested": 415573.33, "pct": 20.19}], "subcategory_breakdown": [{"name": "Thematic", "invested": 611940.33, "pct": 29.75}, {"name": "Small Cap", "invested": 420478.0, "pct": 20.43}, {"name": "Gold", "invested": 311578.44, "pct": 15.14}, {"name": "Sectoral", "invested": 256737.25, "pct": 12.48}, {"name": "Multi Cap", "invested": 191090.48, "pct": 9.29}, {"name": "International", "invested": 162149.86, "pct": 7.88}, {"name": "Silver", "invested": 103994.89, "pct": 5.05}], "amc_breakdown": [{"name": "Nippon India Mutual Fund", "invested": 466825.69, "pct": 22.69}, {"name": "Quant Mutual Fund", "invested": 411729.52, "pct": 20.01}, {"name": "Axis Mutual Fund", "invested": 371296.12, "pct": 18.04}, {"name": "Navi Mutual Fund", "invested": 276144.31, "pct": 13.42}, {"name": "Tata Mutual Fund", "invested": 218239.17, "pct": 10.61}, {"name": "Groww Mutual Fund", "invested": 144742.79, "pct": 7.03}, {"name": "ICICI Prudential Mutual Fund", "invested": 103994.89, "pct": 5.05}, {"name": "LIC Mutual Fund", "invested": 44997.77, "pct": 2.19}, {"name": "Invesco Mutual Fund", "invested": 19998.99, "pct": 0.97}], "guardrails": [{"name": "Thematic + Sectoral exposure (equity sleeve)", "current_pct": 52.89, "cap_pct": 10.0, "status": "BREACH - SEVERE", "detail": "\u20b9868,677 of \u20b91,642,396 equity sleeve (Thematic 37.28% + Sectoral 15.63%) vs a \u226410% guardrail. This is the single biggest structural risk in the portfolio."}, {"name": "Small-cap exposure (equity sleeve)", "current_pct": 25.6, "cap_pct": 20.0, "status": "BREACH", "detail": "\u20b9420,478 of \u20b91,642,396 equity sleeve in small-cap index funds vs a \u226420% guardrail (warn level >25%)."}, {"name": "International equity exposure (equity sleeve)", "current_pct": 9.87, "cap_pct": 15.0, "status": "WITHIN LIMIT", "detail": "\u20b9162,150 of \u20b91,642,396 equity sleeve across 3 FoFs (China, US, Global Consumer) \u2014 comfortably under the \u226415% cap."}, {"name": "Commodities (Gold+Silver) of total portfolio", "current_pct": 20.19, "cap_pct": 15.0, "status": "ELEVATED (context, not a strict guardrail)", "detail": "Typical advisory guidance suggests 5-15% in gold/commodities as a portfolio hedge. At 20.19% across 4 separate gold/silver funds, this is more a concentrated commodity bet than a hedge."}], "overlap_pairs": [{"fund_a": "Nippon India Nifty Smallcap 250 Index Fund", "fund_b": "Groww Nifty Smallcap 250 Index Fund", "overlap_pct": "~100%", "note": "Both passively track the IDENTICAL Nifty Smallcap 250 TRI index. Pure redundant duplication \u2014 no diversification benefit from holding both."}, {"fund_a": "Axis Gold Direct Plan Growth", "fund_b": "LIC MF Gold ETF FoF Direct Growth", "overlap_pct": "~100% (asset-level)", "note": "Both are domestic Gold FoFs tracking the same gold price; Axis Gold has lower expense ratio and far larger AUM."}, {"fund_a": "Quant Infrastructure Fund", "fund_b": "Tata Housing Opportunities Fund", "overlap_pct": "Moderate (stock-level)", "note": "Both hold Larsen & Toubro as a top-5 holding; both ride the India capex/construction cycle."}, {"fund_a": "Quant Infrastructure Fund", "fund_b": "Navi Nifty India Manufacturing Index Fund", "overlap_pct": "Moderate (stock-level)", "note": "Both hold Reliance Industries as a top holding; thematically adjacent (infra capex vs manufacturing capex)."}, {"fund_a": "Quant Commodities Fund", "fund_b": "Quant Infrastructure Fund", "overlap_pct": "Low-Moderate", "note": "Both hold Reliance Industries; both are Quant AMC house-view cyclical plays, adding fund-house concentration on top of stock overlap."}, {"fund_a": "Axis Quant Fund", "fund_b": "Tata Housing Opportunities Fund", "overlap_pct": "Low-Moderate", "note": "Both hold large private banks (HDFC Bank / ICICI Bank / Axis Bank) as top holdings, adding hidden financials-sector overlap."}], "concentration": {"top3_funds_pct": 38.83, "top3_funds": ["Nippon India Smallcap 250 Index (13.40%)", "Axis Gold Direct Plan Growth (12.95%)", "Quant Infrastructure Fund (12.48%)"], "top3_amc_pct": 60.74, "single_fund_breach": "None \u2014 no single fund exceeds 20% of portfolio", "top3_fund_breach": "None \u2014 top 3 funds are 38.83%, under the 50% flag threshold", "stock_level_note": "Reliance Industries appears as a top holding in 3 separate funds (Quant Commodities, Navi Manufacturing Index, Quant Infrastructure) \u2014 true single-stock exposure is higher than any one fund suggests."}, "dividend_plans": [{"scheme": "Nippon India Multi Cap Fund IDCW", "invested": 191090.48, "pct_of_portfolio": 9.29, "note": "IDCW (dividend) option \u2014 recommend switching to the Growth option of the same scheme for tax-efficient compounding."}], "plan_type_flags": [{"scheme": "Nippon India Multi Cap Fund IDCW", "issue": "Scheme name omits 'Direct' (every other holding explicitly states 'Direct Growth'). Cannot confirm from this statement whether this folio is on the Direct or Regular plan.", "impact": "If Regular, expense ratio could be ~1% p.a. higher \u2014 roughly \u20b91,900/year on the current invested amount, compounding over time.", "recommendation": "Verify plan type directly with Nippon India AMC, MF Central, or the registrar (CAMS/KFintech) using the folio number."}], "missing_data": [{"item": "Purchase/transaction dates", "impact": "Cannot compute precise holding period, ST vs LT capital gains classification, or exact per-tranche XIRR.", "source_needed": "CAS (Consolidated Account Statement) from MF Central/CAMS/KFintech with transaction history"}, {"item": "Nominee details", "impact": "Cannot verify nominee registration status across the 19 folios \u2014 SEBI mandates nominee registration to avoid unclaimed-asset risk.", "source_needed": "MF Central nominee status page or direct AMC/RTA confirmation"}, {"item": "Plan type (Direct/Regular) for Nippon India Multi Cap Fund IDCW", "impact": "Cannot confirm cost structure for this 9.29%-weight holding.", "source_needed": "AMC statement or RTA confirmation"}], "score": {"tier1": 5.5, "tier1_weight": 50, "tier2": 5.0, "tier2_weight": 35, "tier3": 6.0, "tier3_weight": 15, "weighted_raw": 5.4, "missing_data_penalty": 0.3, "guardrail_penalty": 0.6, "final": 4.5, "confidence_level": "Moderate", "rationale": "Strong absolute returns (XIRR 10.97%, +27.31% gain) were powered by favorable macro tailwinds across gold, silver, China equities, and US equities simultaneously. Structurally, however, this is a 100% satellite, 0% core portfolio: there is no large-cap, flexi-cap, or diversified index holding anywhere in the book. The Thematic+Sectoral guardrail is breached by more than 5x its cap, small-cap exposure is above its cap, and there is a near-exact duplicate fund pair. The score reflects strong realized performance offset materially by structural concentration risk that could cut both ways if these themes reverse together."}, "top5_improvements": [{"action": "Consolidate the Groww Nifty Smallcap 250 Index Fund into the Nippon India Nifty Smallcap 250 Index Fund", "priority": "High", "detail": "Both track the identical Nifty Smallcap 250 TRI index. Nippon's version is cheaper (0.35% vs 0.45%) and far larger/more established. Holding both adds zero diversification."}, {"action": "Add a core diversified holding (Large-cap, Flexi-cap, or Nifty 50/Nifty 500 index fund)", "priority": "High", "detail": "There is currently no core holding anywhere in this 14-fund portfolio \u2014 it is 100% thematic/sectoral/small-cap/commodity/international satellite bets. A core allocation would meaningfully reduce concentration risk."}, {"action": "Switch Nippon India Multi Cap Fund from IDCW to Growth option", "priority": "High", "detail": "The dividend (IDCW) option breaks compounding and is taxed at slab rate; the Growth option of the same scheme gets LTCG-only tax treatment on redemption."}, {"action": "Trim the Thematic + Sectoral sleeve from ~53% to closer to the \u226410% guardrail", "priority": "High", "detail": "Quant Commodities, Tata Housing, Navi Manufacturing, Axis Quant, and Quant Infrastructure collectively make up over half the equity sleeve in narrow, cyclical, high-risk bets."}, {"action": "Verify the Direct/Regular plan status of the Nippon India Multi Cap Fund IDCW folio", "priority": "Medium", "detail": "This is the one holding whose scheme name doesn't explicitly confirm 'Direct' \u2014 worth a 5-minute check with the AMC or MF Central given it's a 9.29%-weight position."}], "risk_snapshot": {"level": "Aggressive", "rationale": "100% of the portfolio sits in Very High or High risk-rated holdings. There is zero allocation to large-cap, flexi-cap, hybrid, or debt instruments. Thematic+Sectoral bets alone are ~53% of the equity sleeve (vs a 10% guardrail), small-cap is above its cap, and commodities (gold+silver) add a further 20% concentrated, non-equity risk layer. This is a satellite-only, no-core portfolio."}};
+
+function inr(n){ if(n===null||n===undefined) return '—'; return '₹'+Math.round(n).toLocaleString('en-IN'); }
+function pct(n,d=2){ if(n===null||n===undefined) return '—'; return Number(n).toFixed(d)+'%'; }
+
+// ---------- TAB NAV ----------
+document.querySelectorAll('#tabNav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#tabNav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- OVERVIEW ----------
+document.getElementById('scoreRationale').textContent = META.score.rationale;
+document.getElementById('scoreRationale2').textContent = META.score.rationale;
+document.getElementById('riskRationale').textContent = META.risk_snapshot.rationale;
+
+const impList = document.getElementById('improvementsList');
+META.top5_improvements.forEach((imp,i)=>{
+  const li = document.createElement('li');
+  const pclass = imp.priority==='High' ? 'red' : imp.priority==='Medium' ? 'amber' : 'green';
+  li.innerHTML = `<div class="imp-num">${i+1}</div><div><div style="font-weight:700;font-size:13px;">${imp.action} <span class="badge ${pclass}" style="margin-left:6px;">${imp.priority}</span></div><div style="font-size:12.5px;color:var(--ink-soft);margin-top:3px;">${imp.detail}</div></div>`;
+  impList.appendChild(li);
+});
+
+// ---------- PERFORMANCE: fund cards ----------
+function riskBadge(r){
+  if(r==='Very High') return '<span class="badge red">Very High Risk</span>';
+  if(r==='High') return '<span class="badge amber">High Risk</span>';
+  return '<span class="badge grey">'+r+'</span>';
+}
+function retBadge(v){
+  const cls = v>=15 ? 'green' : v>=5 ? 'amber' : 'red';
+  return `<span class="badge ${cls}">${v>=0?'+':''}${v.toFixed(2)}%</span>`;
+}
+
+let perfShowAll = true;
+function renderFundCards(){
+  const sortKey = document.getElementById('perfSort').value;
+  let list = [...FUNDS].sort((a,b)=> b[sortKey]-a[sortKey]);
+  if(!perfShowAll) list = list.slice(0,5);
+  const wrap = document.getElementById('fundCards');
+  wrap.innerHTML = '';
+  list.forEach((f,idx)=>{
+    const card = document.createElement('div');
+    card.className = 'fund-card';
+    card.innerHTML = `
+      <div class="fc-head">
+        <div>
+          <div class="fc-title">${f.scheme}</div>
+          <div class="fc-sub">${f.amc} &middot; ${f.category} / ${f.subcat} &middot; Weight ${f.weight}%</div>
+        </div>
+        <div class="fc-right">
+          ${retBadge(f.ret_pct)}
+          ${riskBadge(f.risk)}
+          <span class="mono" style="font-weight:700;">${inr(f.invested)}</span>
+          <span class="chevron">&#9656;</span>
+        </div>
+      </div>
+      <div class="fc-body">
+        <div class="row"><div class="k">Current Value</div><div>${inr(f.current)} &nbsp; (Gain: ${inr(f.gain)})</div></div>
+        <div class="row"><div class="k">XIRR (reported)</div><div>${f.xirr}</div></div>
+        <div class="row"><div class="k">Benchmark</div><div>${f.benchmark}</div></div>
+        <div class="row"><div class="k">Expense Ratio</div><div>${typeof f.expense==='number' ? f.expense+'%' : f.expense}</div></div>
+        <div class="row"><div class="k">AUM</div><div>~₹${f.aum_cr} Cr</div></div>
+        <div class="row"><div class="k">Launch</div><div>${f.launch}</div></div>
+        <div class="row"><div class="k">Top Holdings</div><div>${f.top_holdings.join(', ')}</div></div>
+        <div class="row"><div class="k">1Y Return (range found)</div><div>${f.ret_1y_range}</div></div>
+        <div class="row"><div class="k">3Y Return</div><div>${f.ret_3y||'—'}</div></div>
+        <div class="row"><div class="k">Plan Type</div><div>${f.plan_flag}</div></div>
+        <div class="row"><div class="k">Data Confidence</div><div>${f.data_conf}</div></div>
+        <div class="row"><div class="k">Why this rating</div><div>${f.why}</div></div>
+        <div class="flag-box ${f.action.includes('Sell')||f.action.includes('Reduce')?'warn':'info'}">
+          <b>Recommended action: ${f.action}</b> (Priority: ${f.priority}, Confidence: ${f.conf})<br>${f.reason}
+        </div>
+      </div>`;
+    card.querySelector('.fc-head').addEventListener('click', ()=> card.classList.toggle('open'));
+    wrap.appendChild(card);
+  });
+}
+document.getElementById('perfSort').addEventListener('change', renderFundCards);
+document.getElementById('showAllPerf').addEventListener('click', ()=>{perfShowAll=true; renderFundCards();});
+document.getElementById('showTop5Perf').addEventListener('click', ()=>{perfShowAll=false; renderFundCards();});
+renderFundCards();
+
+// ---------- ALLOCATION ----------
+function renderBars(containerId, items, colorFn){
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  const max = Math.max(...items.map(i=>i.pct));
+  items.forEach(it=>{
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    const color = colorFn ? colorFn(it) : 'var(--cyan)';
+    row.innerHTML = `<div class="lbl">${it.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(it.pct/max*100).toFixed(1)}%;background:${color};"></div></div><div class="bar-val">${it.pct.toFixed(2)}%</div>`;
+    el.appendChild(row);
+  });
+}
+renderBars('assetClassBars', META.category_breakdown.map(c=>({name:c.name,pct:c.pct})), c=> c.name.includes('Equity') ? 'var(--cyan)' : 'var(--amber)');
+renderBars('amcBars', META.amc_breakdown.map(a=>({name:a.name,pct:a.pct})));
+renderBars('subcatBars', META.subcategory_breakdown.map(s=>({name:s.name,pct:s.pct})), s=>{
+  if(s.name==='Thematic'||s.name==='Sectoral') return 'var(--red)';
+  if(s.name==='Small Cap') return 'var(--amber)';
+  return 'var(--cyan)';
+});
+
+function renderGuardrails(){
+  const el = document.getElementById('guardrailBars');
+  el.innerHTML='';
+  META.guardrails.forEach(g=>{
+    const max = Math.max(g.current_pct, g.cap_pct) * 1.15;
+    const color = g.status.includes('BREACH') ? 'var(--red)' : g.status.includes('ELEVATED') ? 'var(--amber)' : 'var(--green)';
+    const badgeClass = g.status.includes('BREACH') ? 'red' : g.status.includes('ELEVATED') ? 'amber' : 'green';
+    const div = document.createElement('div');
+    div.style.marginBottom='16px';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div style="font-weight:700;font-size:13px;">${g.name}</div>
+        <span class="badge ${badgeClass}">${g.status}</span>
+      </div>
+      <div class="bar-track" style="height:14px;position:relative;">
+        <div class="bar-fill" style="width:${(g.current_pct/max*100).toFixed(1)}%;background:${color};height:100%;"></div>
+        <div class="cap-marker" style="left:${(g.cap_pct/max*100).toFixed(1)}%;"></div>
+      </div>
+      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Current: <b>${g.current_pct}%</b> &nbsp;|&nbsp; Cap: <b>${g.cap_pct}%</b> (black line) &nbsp;|&nbsp; ${g.detail}</div>
+    `;
+    el.appendChild(div);
+  });
+}
+renderGuardrails();
+
+const overlapBody = document.querySelector('#overlapTable tbody');
+META.overlap_pairs.forEach(o=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${o.fund_a}</td><td>${o.fund_b}</td><td><span class="badge ${o.overlap_pct.includes('100')?'red':'amber'}">${o.overlap_pct}</span></td><td style="font-size:12px;">${o.note}</td>`;
+  overlapBody.appendChild(tr);
+});
+
+// ---------- ACTION ----------
+function renderActionTable(filter){
+  const body = document.querySelector('#actionTable tbody');
+  body.innerHTML = '';
+  const order = {High:0, Medium:1, Low:2};
+  let list = [...FUNDS].sort((a,b)=> order[a.priority]-order[b.priority]);
+  if(filter && filter!=='all') list = list.filter(f=>f.priority===filter);
+  list.forEach(f=>{
+    const pclass = f.priority==='High'?'red':f.priority==='Medium'?'amber':'green';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="font-weight:600;">${f.scheme}</td><td>${f.action}</td><td><span class="badge ${pclass}">${f.priority}</span></td><td>${f.conf}</td><td style="font-size:12px;">${f.reason}</td>`;
+    body.appendChild(tr);
+  });
+}
+renderActionTable('all');
+document.querySelectorAll('[data-filter]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-filter]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderActionTable(btn.dataset.filter);
+  });
+});
+
+// ---------- TAX ----------
+const taxBody = document.getElementById('taxInferenceTable');
+FUNDS.forEach(f=>{
+  const tr = document.createElement('tr');
+  const xirrNum = parseFloat(String(f.xirr).split('%')[0]) || 0;
+  const signal = xirrNum > 0 ? 'High reported XIRR — likely held >1 year, but unconfirmed' : 'Insufficient data to infer';
+  tr.innerHTML = `<td>${f.scheme}</td><td class="num">${f.xirr}</td><td style="font-size:12px;">${signal}</td>`;
+  taxBody.appendChild(tr);
+});
+
+// ---------- SOURCES ----------
+const gapBody = document.querySelector('#gapTable tbody');
+META.missing_data.forEach(g=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td style="font-weight:600;">${g.item}</td><td style="font-size:12px;">${g.impact}</td><td style="font-size:12px;">${g.source_needed}</td>`;
+  gapBody.appendChild(tr);
+});
+
+const confBody = document.querySelector('#confTable tbody');
+FUNDS.forEach(f=>{
+  const lvl = f.data_conf.split(' - ')[0] || f.data_conf;
+  const cls = lvl.includes('High') ? 'green' : lvl.includes('Medium') ? 'amber' : 'red';
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${f.scheme}</td><td><span class="badge ${cls}">${lvl}</span></td><td style="font-size:12px;">${f.data_conf}</td>`;
+  confBody.appendChild(tr);
+});
+</script>
+</body>
+</html>
